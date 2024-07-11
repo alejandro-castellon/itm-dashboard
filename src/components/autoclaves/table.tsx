@@ -11,27 +11,32 @@ import {
 import { useRouter } from "next/navigation";
 import { Button } from "../ui/button";
 import { Trash2 } from "lucide-react";
+import AutoclaveStatus from "./status";
 
-const invoices = [
+const autoclaves = [
   {
-    invoice: "INV001",
-    paymentStatus: "Cochabamba",
-    paymentMethod: "1",
+    id: "INV001",
+    location: "Cochabamba",
+    type: "1",
+    status: "Correcto",
   },
   {
-    invoice: "INV002",
-    paymentStatus: "Cochabamba",
-    paymentMethod: "2",
+    id: "INV002",
+    location: "Cochabamba",
+    type: "2",
+    status: "Correcto",
   },
   {
-    invoice: "INV003",
-    paymentStatus: "Oruro",
-    paymentMethod: "2",
+    id: "INV003",
+    location: "Oruro",
+    type: "2",
+    status: "Falla",
   },
   {
-    invoice: "INV004",
-    paymentStatus: "Cochabamba",
-    paymentMethod: "3",
+    id: "INV004",
+    location: "Cochabamba",
+    type: "3",
+    status: "Correcto",
   },
 ];
 
@@ -49,22 +54,31 @@ export default function AutoclaveTable() {
           <TableHead className="w-[100px]">Id</TableHead>
           <TableHead>Location</TableHead>
           <TableHead>Type</TableHead>
+          <TableHead>Status</TableHead>
           <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
-        {invoices.map((invoice) => (
-          <TableRow key={invoice.invoice}>
-            <TableCell className="font-medium">{invoice.invoice}</TableCell>
-            <TableCell>{invoice.paymentStatus}</TableCell>
-            <TableCell>{invoice.paymentMethod}</TableCell>
+        {autoclaves.map((autoclave) => (
+          <TableRow key={autoclave.id}>
+            <TableCell className="font-medium">{autoclave.id}</TableCell>
+            <TableCell>{autoclave.location}</TableCell>
+            <TableCell>{autoclave.type}</TableCell>
+            <TableCell>
+              <AutoclaveStatus status={autoclave.status} />
+            </TableCell>
             <TableCell className="text-right">
-              <Button className="h-7 bg-sky-500" onClick={handleView}>
-                View
-              </Button>
-              <button>
-                <Trash2 className="h-5 w-5 text-red-600" />
-              </button>
+              <div className="flex items-center justify-end space-x-2">
+                <Button
+                  className="h-7 bg-sky-500 flex items-center justify-center"
+                  onClick={handleView}
+                >
+                  View
+                </Button>
+                <button className="h-7 flex items-center justify-center">
+                  <Trash2 className="text-red-600" />
+                </button>
+              </div>
             </TableCell>
           </TableRow>
         ))}
