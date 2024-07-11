@@ -1,4 +1,3 @@
-// components/login/login-form.tsx
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -41,7 +40,7 @@ export function LoginForm() {
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(values);
-    router.push("/username");
+    router.push("/dashboard");
   }
 
   return (

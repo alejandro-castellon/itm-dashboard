@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Table,
   TableBody,
@@ -6,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useRouter } from "next/navigation";
 import { Button } from "../ui/button";
 import { Trash2 } from "lucide-react";
 
@@ -33,6 +36,12 @@ const invoices = [
 ];
 
 export default function AutoclaveTable() {
+  const router = useRouter();
+
+  const handleView = () => {
+    router.push("/dashboard/autoclave/manual");
+  };
+
   return (
     <Table>
       <TableHeader>
@@ -50,7 +59,9 @@ export default function AutoclaveTable() {
             <TableCell>{invoice.paymentStatus}</TableCell>
             <TableCell>{invoice.paymentMethod}</TableCell>
             <TableCell className="text-right">
-              <Button className="h-7 bg-sky-500">View</Button>
+              <Button className="h-7 bg-sky-500" onClick={handleView}>
+                View
+              </Button>
               <button>
                 <Trash2 className="h-5 w-5 text-red-600" />
               </button>
