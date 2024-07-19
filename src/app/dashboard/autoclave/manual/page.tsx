@@ -21,7 +21,7 @@ export default function Page() {
 
   return (
     <main>
-      <div className="text-2xl font-bold mb-4">Control Manual</div>
+      <div className="text-3xl font-bold mb-4">Control Manual</div>
       <Card>
         <CardHeader className="pb-0">
           <CardTitle className="flex items-center justify-between">

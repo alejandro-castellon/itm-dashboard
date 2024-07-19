@@ -11,7 +11,7 @@ import { Gauge, Thermometer, Timer } from "lucide-react";
 export default function Page() {
   return (
     <main>
-      <div className="text-2xl font-bold mb-4">Control Automático</div>
+      <div className="text-3xl font-bold mb-4">Control Automático</div>
       <Card>
         <CardContent className="flex items-center justify-center bg-sky-100 m-4">
           <div className="text-5xl font-bold mt-3">00.00</div>
@@ -49,11 +49,11 @@ export default function Page() {
           </CardTitle>
         </CardHeader>
         <CardContent className="flex items-center justify-center bg-sky-100 m-4">
-          <div className="text-5xl font-bold mt-2">5.00 </div>
+          <div className="text-5xl font-bold mt-2">35.00 </div>
         </CardContent>
       </Card>
-      <Button className="mt-4 bg-sky-500">Comenzar</Button>
-      <Button className="mt-4 bg-sky-500">Cancelar</Button>
+      <Button className="m-4 bg-sky-500">Comenzar</Button>
+      <Button className="m-4 bg-sky-500">Cancelar</Button>
       <img src="/charts.svg" width={300} height={500} />
     </main>
   );
