@@ -16,24 +16,28 @@ import AutoclaveStatus from "./status";
 const autoclaves = [
   {
     id: "INV001",
+    name: "Autoclave 1",
     location: "Cochabamba",
     type: "1",
     status: "Correcto",
   },
   {
     id: "INV002",
+    name: "Autoclave 2",
     location: "Cochabamba",
     type: "2",
     status: "Correcto",
   },
   {
     id: "INV003",
+    name: "Autoclave 3",
     location: "Oruro",
     type: "2",
     status: "Falla",
   },
   {
     id: "INV004",
+    name: "Autoclave 4",
     location: "Cochabamba",
     type: "3",
     status: "Correcto",
@@ -52,16 +56,18 @@ export default function AutoclaveTable() {
       <TableHeader>
         <TableRow>
           <TableHead className="w-[100px]">Id</TableHead>
-          <TableHead>Location</TableHead>
-          <TableHead>Type</TableHead>
+          <TableHead>Nombre</TableHead>
+          <TableHead>Ubicación</TableHead>
+          <TableHead>Tipo</TableHead>
           <TableHead>Status</TableHead>
-          <TableHead className="text-right">Actions</TableHead>
+          <TableHead className="text-right">Acciones</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {autoclaves.map((autoclave) => (
           <TableRow key={autoclave.id}>
             <TableCell className="font-medium">{autoclave.id}</TableCell>
+            <TableCell>{autoclave.name}</TableCell>
             <TableCell>{autoclave.location}</TableCell>
             <TableCell>{autoclave.type}</TableCell>
             <TableCell>
