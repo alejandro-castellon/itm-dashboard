@@ -79,7 +79,7 @@ export default function AutoclaveTable() {
                   className="h-7 bg-sky-500 flex items-center justify-center"
                   onClick={handleView}
                 >
-                  View
+                  Ver
                 </Button>
                 <button className="h-7 flex items-center justify-center">
                   <Trash2 className="text-red-600" />

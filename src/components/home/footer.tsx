@@ -23,11 +23,11 @@ const Footer = () => (
             />
           </Link>
           <h2 className="text-gray-800 text-lg font-semibold sm:text-2xl">
-            Websites optimization tool
+            Ingeniería y Tecnología Médica
           </h2>
           <p className="max-w-md">
-            We help companies around the world to get the best strategies to
-            improve their marketing.
+            Proveemos de equipos medicos de alta tecnología, realizamos
+            mantenimiento y diseño.
           </p>
           <div className="pt-2 flex items-center gap-x-6 text-gray-400">
             <a href="/" target="_blank" aria-label="Social media">

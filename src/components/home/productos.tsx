@@ -19,7 +19,7 @@ const Productos = () => {
           <div className="pt-1">
             <NavLink
               href="/404"
-              className="inline-flex items-center gap-x-2 font-medium text-sm text-white bg-sky-500 hover:bg-blue-500 active:bg-blue-700 "
+              className="inline-flex items-center gap-x-2 font-medium text-sm text-white bg-sky-500 hover:bg-gray-600 active:bg-blue-700 "
             >
               Ver Productos
               <svg
