@@ -8,6 +8,7 @@ import { User } from "@supabase/supabase-js";
 interface AuthContextType {
   user: User | null;
   role: string | null;
+  autoclaveId: string | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -21,6 +22,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<string | null>(null);
+  const [autoclaveId, setAutoclaveId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -41,19 +43,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         if (user) {
           const { data: roleData, error: roleError } = await supabase
             .from("users")
-            .select("role")
+            .select("role, autoclave_id")
             .eq("id", user.id)
             .single();
 
           if (roleError) throw roleError;
 
           setRole(roleData?.role ?? null);
+          setAutoclaveId(roleData?.autoclave_id ?? null);
         }
       } catch (error: any) {
         setError("Failed to fetch user or role. Please try again.");
         console.error("Error fetching user or role:", error.message);
         setUser(null);
         setRole(null);
+        setAutoclaveId(null);
       } finally {
         setLoading(false);
       }
@@ -84,13 +88,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       if (user) {
         const { data: roleData, error: roleError } = await supabase
           .from("users")
-          .select("role")
+          .select("role, autoclave_id")
           .eq("id", user.id)
           .single();
 
         if (roleError) throw roleError;
 
         setRole(roleData?.role ?? null);
+        setAutoclaveId(roleData?.autoclave_id ?? null);
       }
     } catch (error: any) {
       setError(
@@ -101,6 +106,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       console.error("Login error:", error.message);
       setUser(null);
       setRole(null);
+      setAutoclaveId(null);
     } finally {
       setLoading(false);
     }
@@ -112,6 +118,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       await supabase.auth.signOut();
       setUser(null);
       setRole(null);
+      setAutoclaveId(null);
       router.push("/login");
     } catch (error: any) {
       setError("Failed to log out. Please try again.");
@@ -122,7 +129,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   return (
-    <AuthContext.Provider value={{ user, role, loading, login, logout, error }}>
+    <AuthContext.Provider
+      value={{ user, role, autoclaveId, loading, login, logout, error }}
+    >
       {children}
     </AuthContext.Provider>
   );

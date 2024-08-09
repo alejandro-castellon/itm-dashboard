@@ -29,7 +29,7 @@ const formSchema = z.object({
 });
 
 export default function LoginForm() {
-  const { login, role, loading, error, user } = useAuth();
+  const { login, role, autoclaveId, loading, error, user } = useAuth();
   const [localError, setLocalError] = useState<string | null>(null);
   const router = useRouter();
 
@@ -48,7 +48,7 @@ export default function LoginForm() {
       if (role === "ADMIN") {
         router.push("/dashboard");
       } else {
-        router.push("/dashboard/autoclave/manual");
+        router.push(`/dashboard/${autoclaveId}/manual`);
       }
     }
   }, [user, role, error, router]);

@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -12,43 +13,28 @@ import { useRouter } from "next/navigation";
 import { Button } from "../ui/button";
 import { Trash2 } from "lucide-react";
 import AutoclaveStatus from "./status";
-
-const autoclaves = [
-  {
-    id: "INV001",
-    name: "Autoclave 1",
-    location: "Cochabamba",
-    type: "1",
-    status: "Correcto",
-  },
-  {
-    id: "INV002",
-    name: "Autoclave 2",
-    location: "Cochabamba",
-    type: "2",
-    status: "Correcto",
-  },
-  {
-    id: "INV003",
-    name: "Autoclave 3",
-    location: "Oruro",
-    type: "2",
-    status: "Falla",
-  },
-  {
-    id: "INV004",
-    name: "Autoclave 4",
-    location: "Cochabamba",
-    type: "3",
-    status: "Correcto",
-  },
-];
+import { supabase } from "@/utils/supabaseClient";
 
 export default function AutoclaveTable() {
+  const [autoclaves, setAutoclaves] = useState<any[]>([]);
   const router = useRouter();
 
-  const handleView = () => {
-    router.push("/dashboard/autoclave/manual");
+  useEffect(() => {
+    const fetchAutoclaves = async () => {
+      const { data, error } = await supabase.from("autoclaves").select("*");
+
+      if (error) {
+        console.error("Error fetching autoclaves:", error);
+      } else {
+        setAutoclaves(data || []);
+      }
+    };
+
+    fetchAutoclaves();
+  }, []);
+
+  const handleView = (id: string) => {
+    router.push(`/dashboard/${id}/manual`);
   };
 
   return (
@@ -77,7 +63,7 @@ export default function AutoclaveTable() {
               <div className="flex items-center justify-end space-x-2">
                 <Button
                   className="h-7 bg-sky-500 flex items-center justify-center"
-                  onClick={handleView}
+                  onClick={() => handleView(autoclave.id)}
                 >
                   Ver
                 </Button>

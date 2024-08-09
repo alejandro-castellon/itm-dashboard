@@ -9,7 +9,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { user, role, loading } = useAuth();
+  const { user, role, autoclaveId, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -21,9 +21,9 @@ export default function RootLayout({
     }
 
     if (role !== "ADMIN") {
-      router.push("/dashboard/autoclave/manual");
+      router.push(`/dashboard/${autoclaveId}/manual`);
     }
-  }, [user, role, loading, router]);
+  }, [user, role, autoclaveId, loading, router]);
 
   if (loading) {
     return <div>Loading...</div>; // Consider using a spinner or other indicator
