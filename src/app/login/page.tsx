@@ -1,17 +1,20 @@
 import Image from "next/image";
-import { LoginForm } from "@/components/login/login-form";
+import LoginForm from "@/components/login/login-form";
+import Link from "next/link";
 
 export default function Home() {
   return (
     <main className="min-h-screen flex">
       <div className="w-1/2 bg-sky-500 flex flex-col justify-center text-white p-10">
-        <Image
-          src="/logo.png"
-          width={300}
-          height={100}
-          className="mb-8"
-          alt="Company logo"
-        />
+        <Link href="/">
+          <Image
+            src="/logo.png"
+            width={300}
+            height={100}
+            className="mb-8"
+            alt="Company logo"
+          />
+        </Link>
         <p className="text-sm">
           Lorem Ipsum is simply dummy text of the printing and typesetting
           industry. Lorem Ipsum has been the industry standard dummy text ever
@@ -20,9 +23,13 @@ export default function Home() {
         </p>
       </div>
       <div className="w-1/2 flex flex-col items-center justify-center">
-        <div className="flex justify-center mb-6">
-          <Image src="/icon.png" alt="Company icon" width={100} height={100} />
-        </div>
+        <Image
+          className="flex justify-center mb-6"
+          src="/icon.png"
+          alt="Company icon"
+          width={100}
+          height={100}
+        />
         <h2 className="text-center text-2xl mb-12">WELCOME</h2>
         <LoginForm />
       </div>

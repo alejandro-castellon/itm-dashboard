@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { supabase } from "@/utils/supabaseClient"; // Asegúrate de tener configurado supabaseClient
+import { useState, useEffect } from "react";
+import { useAuth } from "@/utils/AuthContext";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -18,85 +18,80 @@ import {
 import { Input } from "@/components/ui/input";
 
 const formSchema = z.object({
-  username: z
+  email: z
     .string()
-    .min(5, {
-      message: "Username must be at least 5 characters.",
-    })
-    .max(50, {
-      message: "Username must be at most 50 characters.",
-    }),
-  password: z.string().min(5),
+    .email({ message: "Invalid email address" })
+    .min(5, { message: "Email must be at least 5 characters." })
+    .max(50, { message: "Email must be at most 50 characters." }),
+  password: z
+    .string()
+    .min(5, { message: "Password must be at least 5 characters." }),
 });
 
-export function LoginForm() {
+export default function LoginForm() {
+  const { login, role, loading, error, user } = useAuth();
+  const [localError, setLocalError] = useState<string | null>(null);
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    setLoading(true);
-    setError(null);
-
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: values.username, // Supabase utiliza 'email' por defecto en su autenticación
-      password: values.password,
-    });
-
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-      return;
-    }
-
-    // Si la autenticación fue exitosa, puedes redirigir al usuario según su rol.
-    if (data.user) {
-      const { data: userData, error: userError } = await supabase
-        .from("users")
-        .select("role")
-        .eq("id", data.user.id)
-        .single();
-
-      if (userError) {
-        setError("Error fetching user role");
-        setLoading(false);
-        return;
-      }
-
-      // Redirige según el rol
-      if (userData?.role === "ADMIN") {
+  // Efecto para manejar la redirección
+  useEffect(() => {
+    if (user && role && !error) {
+      // Redirige basado en el rol
+      if (role === "ADMIN") {
         router.push("/dashboard");
       } else {
         router.push("/dashboard/autoclave/manual");
       }
     }
+  }, [user, role, error, router]);
 
-    setLoading(false);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setLocalError(null); // Resetea el error local antes de intentar el login
+    try {
+      await login(values.email, values.password);
+    } catch (authError: unknown) {
+      // Maneja errores de autenticación de forma robusta
+      if (authError instanceof Error) {
+        setLocalError(
+          authError.message.includes("Invalid login credentials")
+            ? "The email or password you entered is incorrect."
+            : authError.message
+        );
+      } else {
+        setLocalError("An unknown error occurred. Please try again later.");
+      }
+    }
+  }
+
+  if (loading) {
+    return <div>Loading...</div>; // Puedes reemplazar esto con un spinner
   }
 
   return (
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-6 w-full max-w-sm"
+        className="space-y-6 w-full max-w-sm mx-auto"
       >
-        {error && <p className="text-red-500">{error}</p>}
+        {(error || localError) && (
+          <p className="text-red-500">{error || localError}</p>
+        )}
         <FormField
           control={form.control}
-          name="username"
+          name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Username</FormLabel>
+              <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input placeholder="Enter your username" {...field} />
+                <Input placeholder="Enter your email" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -125,6 +120,13 @@ export function LoginForm() {
           disabled={loading}
         >
           {loading ? "Loading..." : "Log in"}
+        </Button>
+        <Button
+          type="button"
+          className="w-full"
+          onClick={() => router.push("/")}
+        >
+          Cancel
         </Button>
       </form>
     </Form>

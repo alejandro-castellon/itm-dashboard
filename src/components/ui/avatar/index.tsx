@@ -20,16 +20,13 @@ import {
 import { useTheme } from "next-themes";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/utils/AuthContext";
 
 export default function AvatarProfile() {
   const [position, setPosition] = useState("bottom");
   const router = useRouter();
   const { setTheme } = useTheme();
-
-  const handleLogout = () => {
-    // Perform logout logic here (e.g., clearing session, tokens, etc.)
-    router.push("/login"); // Redirect to the main screen
-  };
+  const { logout } = useAuth();
 
   return (
     <DropdownMenu>
@@ -80,7 +77,7 @@ export default function AvatarProfile() {
           </DropdownMenuSub>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleLogout}>Log out</DropdownMenuItem>
+        <DropdownMenuItem onClick={logout}>Log out</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
