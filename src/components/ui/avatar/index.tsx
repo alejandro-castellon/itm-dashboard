@@ -28,7 +28,7 @@ export default function AvatarProfile() {
 
   const handleLogout = () => {
     // Perform logout logic here (e.g., clearing session, tokens, etc.)
-    router.push("/"); // Redirect to the main screen
+    router.push("/login"); // Redirect to the main screen
   };
 
   return (
