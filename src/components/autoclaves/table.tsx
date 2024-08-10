@@ -9,6 +9,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
 import { Button } from "../ui/button";
 import { Trash2 } from "lucide-react";
@@ -35,6 +45,19 @@ export default function AutoclaveTable() {
 
   const handleView = (id: string) => {
     router.push(`/dashboard/${id}/manual`);
+  };
+
+  const handleDelete = async (id: string) => {
+    const { error } = await supabase.from("autoclaves").delete().eq("id", id);
+
+    if (error) {
+      console.error("Error deleting autoclave:", error);
+    } else {
+      // Actualiza la lista de autoclaves sin el eliminado
+      setAutoclaves((prevAutoclaves) =>
+        prevAutoclaves.filter((autoclave) => autoclave.id !== id)
+      );
+    }
   };
 
   return (
@@ -67,9 +90,34 @@ export default function AutoclaveTable() {
                 >
                   Ver
                 </Button>
-                <button className="h-7 flex items-center justify-center">
-                  <Trash2 className="text-red-600" />
-                </button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <button className="h-7 flex items-center justify-center">
+                      <Trash2 className="text-red-600" />
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>
+                        Esta seguro que quiere eliminar la autoclave.
+                      </DialogTitle>
+                      <DialogDescription>
+                        Se quitara todo el contenido de la autoclave.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="sm:justify-start">
+                      <DialogClose asChild>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          onClick={() => handleDelete(autoclave.id)}
+                        >
+                          Eliminar Autoclave
+                        </Button>
+                      </DialogClose>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             </TableCell>
           </TableRow>

@@ -53,7 +53,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           setAutoclaveId(roleData?.autoclave_id ?? null);
         }
       } catch (error: any) {
-        setError("Failed to fetch user or role. Please try again.");
         console.error("Error fetching user or role:", error.message);
         setUser(null);
         setRole(null);

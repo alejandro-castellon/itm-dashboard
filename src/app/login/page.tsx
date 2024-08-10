@@ -4,8 +4,8 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <main className="min-h-screen flex">
-      <div className="w-1/2 bg-sky-500 flex flex-col justify-center text-white p-10">
+    <main className="min-h-screen flex flex-col md:flex-row">
+      <div className="hidden md:flex w-full md:w-1/2 bg-sky-500 flex-col justify-center text-white p-10">
         <Link href="/">
           <Image
             src="/logo.png"
@@ -22,7 +22,7 @@ export default function Home() {
           scrambled it to make a type specimen book.
         </p>
       </div>
-      <div className="w-1/2 flex flex-col items-center justify-center">
+      <div className="w-full md:w-1/2 flex flex-col items-center justify-center min-h-screen md:min-h-0">
         <Image
           className="flex justify-center mb-6"
           src="/icon.png"

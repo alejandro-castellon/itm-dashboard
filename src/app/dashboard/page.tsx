@@ -1,6 +1,5 @@
 import Image from "next/image";
 import AvatarProfile from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
 import AutoclaveTable from "@/components/autoclaves/table";
 import Overview from "@/components/dashboard/overview";
 
@@ -15,7 +14,6 @@ export default function DashboardPage() {
       </header>
       <div className="flex flex-1 mt-10 space-x-3">
         <Overview />
-        <Separator orientation="vertical" />
         <section className="flex-1 p-4">
           <div className="text-2xl font-bold mb-4">Autoclaves</div>
           <AutoclaveTable />
