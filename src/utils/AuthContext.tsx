@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+} from "react";
 import { supabase } from "@/utils/supabaseClient";
 import { useRouter } from "next/navigation";
 import { User } from "@supabase/supabase-js";
@@ -27,6 +33,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
+  // Ref para manejar el temporizador
+  const logoutTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Configurar el tiempo de expiración (en milisegundos)
+  const EXPIRATION_TIME = 10 * 60 * 1000; // 10 minutos
+
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -51,6 +63,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
           setRole(roleData?.role ?? null);
           setAutoclaveId(roleData?.autoclave_id ?? null);
+
+          // Iniciar el temporizador de cierre de sesión
+          startLogoutTimer();
         }
       } catch (error: any) {
         console.error("Error fetching user or role:", error.message);
@@ -63,7 +78,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     };
 
     fetchUser();
+
+    // Escuchar eventos de usuario para reiniciar el temporizador
+    window.addEventListener("click", resetLogoutTimer);
+    window.addEventListener("mousemove", resetLogoutTimer);
+    window.addEventListener("keydown", resetLogoutTimer);
+
+    return () => {
+      // Limpiar los eventos cuando se desmonta el componente
+      window.removeEventListener("click", resetLogoutTimer);
+      window.removeEventListener("mousemove", resetLogoutTimer);
+      window.removeEventListener("keydown", resetLogoutTimer);
+      clearLogoutTimer(); // Limpiar el temporizador al desmontar
+    };
   }, []);
+
+  const startLogoutTimer = () => {
+    clearLogoutTimer(); // Limpiar cualquier temporizador existente
+    logoutTimerRef.current = setTimeout(logout, EXPIRATION_TIME);
+  };
+
+  const resetLogoutTimer = () => {
+    if (logoutTimerRef.current) {
+      clearTimeout(logoutTimerRef.current);
+      startLogoutTimer();
+    }
+  };
+
+  const clearLogoutTimer = () => {
+    if (logoutTimerRef.current) {
+      clearTimeout(logoutTimerRef.current);
+      logoutTimerRef.current = null;
+    }
+  };
 
   const login = async (email: string, password: string) => {
     setLoading(true);
@@ -95,6 +142,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
         setRole(roleData?.role ?? null);
         setAutoclaveId(roleData?.autoclave_id ?? null);
+
+        // Reiniciar el temporizador de cierre de sesión al iniciar sesión
+        startLogoutTimer();
       }
     } catch (error: any) {
       setError(
@@ -118,6 +168,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setUser(null);
       setRole(null);
       setAutoclaveId(null);
+      clearLogoutTimer(); // Limpiar el temporizador al cerrar sesión
       router.push("/login");
     } catch (error: any) {
       setError("Failed to log out. Please try again.");
