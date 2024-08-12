@@ -4,10 +4,11 @@ import {
   ColorType,
   IChartApi,
   ISeriesApi,
+  Time,
 } from "lightweight-charts";
 
 type ChartComponentProps = {
-  data: { time: string; value: number }[];
+  data: { time: Time; value: number }[];
   colors?: {
     backgroundColor?: string;
     lineColor?: string;
@@ -80,6 +81,12 @@ export const ChartComponent: React.FC<ChartComponentProps> = ({
     areaTopColor,
     areaBottomColor,
   ]);
+
+  useEffect(() => {
+    if (seriesRef.current) {
+      seriesRef.current.setData(data);
+    }
+  }, [data]);
 
   return <div ref={chartContainerRef} className="w-full h-64" />;
 };

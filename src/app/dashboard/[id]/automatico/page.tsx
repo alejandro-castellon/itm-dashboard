@@ -22,37 +22,46 @@ import {
 import { Gauge, Thermometer, Timer } from "lucide-react";
 import { ChartComponent } from "@/components/autoclaves/chart";
 
-const initialData = [
-  { time: "2018-12-22", value: 32.51 },
-  { time: "2018-12-23", value: 31.11 },
-  { time: "2018-12-24", value: 27.02 },
-  { time: "2018-12-25", value: 27.32 },
-  { time: "2018-12-26", value: 25.17 },
-  { time: "2018-12-27", value: 28.89 },
-  { time: "2018-12-28", value: 25.46 },
-  { time: "2018-12-29", value: 23.92 },
-  { time: "2018-12-30", value: 22.68 },
-  { time: "2018-12-31", value: 22.67 },
-];
-
 export default function Page() {
   const [totalTime, setTotalTime] = useState<number>(0);
   const [isRunning, setIsRunning] = useState<boolean>(false);
+  const [chartPress, setChartPress] = useState<{ time: any; value: number }[]>([
+    { time: -1, value: 30.0 },
+  ]);
+  const [chartTemp, setChartTemp] = useState<{ time: any; value: number }[]>([
+    { time: -1, value: 5.0 },
+  ]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (isRunning) {
       timer = setInterval(() => {
         setTotalTime((prevTime) => prevTime + 1);
+
+        // Generar valores aleatorios para presión y temperatura
+        const newPressure = 5 + Math.random() * 2;
+        const newTemperature = 30 + Math.random() * 10;
+
+        // Agregar nuevos datos a la gráfica
+        setChartPress((prevData) => [
+          ...prevData,
+          { time: totalTime, value: newPressure }, // Usar `totalTime` para el tiempo en segundos
+        ]);
+        setChartTemp((prevData) => [
+          ...prevData,
+          { time: totalTime, value: newTemperature }, // Usar `totalTime` para el tiempo en segundos
+        ]);
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [isRunning]);
+  }, [isRunning, totalTime]);
 
   const handleStart = () => setIsRunning(true);
   const handleCancel = () => {
     setIsRunning(false);
     setTotalTime(0);
+    setChartPress([{ time: -1, value: 30.0 }]);
+    setChartTemp([{ time: -1, value: 5.0 }]);
   };
 
   const formatTime = (seconds: number): string => {
@@ -96,7 +105,9 @@ export default function Page() {
               </CardTitle>
             </CardHeader>
             <CardContent className="flex items-center justify-center bg-sky-100 m-4">
-              <div className="text-5xl font-bold mt-2">5.00</div>
+              <div className="text-5xl font-bold mt-2">
+                {chartPress[totalTime].value.toFixed(2)}
+              </div>
             </CardContent>
           </Card>
           <Card className="flex-1">
@@ -110,7 +121,9 @@ export default function Page() {
               </CardTitle>
             </CardHeader>
             <CardContent className="flex items-center justify-center bg-sky-100 m-4">
-              <div className="text-5xl font-bold mt-2">35.00</div>
+              <div className="text-5xl font-bold mt-2">
+                {chartTemp[totalTime].value.toFixed(2)}
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -121,12 +134,16 @@ export default function Page() {
           <Button
             className="bg-sky-500 px-6 py-3 text-xl w-3/4"
             onClick={handleStart}
+            disabled={isRunning}
           >
             Comenzar
           </Button>
           <Dialog>
             <DialogTrigger asChild>
-              <Button className="bg-sky-500 px-6 py-3 text-xl w-3/4">
+              <Button
+                className="bg-sky-500 px-6 py-3 text-xl w-3/4"
+                disabled={!isRunning}
+              >
                 Cancelar
               </Button>
             </DialogTrigger>
@@ -153,8 +170,8 @@ export default function Page() {
         </div>
 
         <div className="lg:col-span-1 space-y-28">
-          <ChartComponent data={initialData} />
-          <ChartComponent data={initialData} />
+          <ChartComponent data={chartPress} />
+          <ChartComponent data={chartTemp} />
         </div>
       </div>
     </main>
