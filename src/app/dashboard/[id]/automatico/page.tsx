@@ -21,47 +21,87 @@ import {
 } from "@/components/ui/dialog";
 import { Gauge, Thermometer, Timer } from "lucide-react";
 import { ChartComponent } from "@/components/autoclaves/chart";
+import mqtt from "mqtt"; // Importamos la librería mqtt
 
 export default function Page() {
   const [totalTime, setTotalTime] = useState<number>(0);
   const [isRunning, setIsRunning] = useState<boolean>(false);
-  const [chartPress, setChartPress] = useState<{ time: any; value: number }[]>([
-    { time: -1, value: 30.0 },
-  ]);
-  const [chartTemp, setChartTemp] = useState<{ time: any; value: number }[]>([
-    { time: -1, value: 5.0 },
-  ]);
+  const [chartPress, setChartPress] = useState<{ time: any; value: number }[]>(
+    []
+  );
+  const [chartTemp, setChartTemp] = useState<{ time: any; value: number }[]>(
+    []
+  );
+  const [client, setClient] = useState<any>(null);
 
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (isRunning) {
-      timer = setInterval(() => {
-        setTotalTime((prevTime) => prevTime + 1);
+    // Configurar el cliente MQTT
+    const mqttUrl = "wss://fe6ef6f5.ala.us-east-1.emqxsl.com:8084/mqtt"; // URL del broker MQTT sobre WebSocket seguro
+    const options = {
+      username: "casfer", // Si requiere autenticación
+      password: "casfer",
+      reconnectPeriod: 1000, // Intentar reconectar cada segundo
+      connectTimeout: 30 * 1000,
+      // Si el broker tiene certificados autofirmados, puedes usar esta opción
+      // rejectUnauthorized: false,
+    };
 
-        // Generar valores aleatorios para presión y temperatura
-        const newPressure = 5 + Math.random() * 2;
-        const newTemperature = 30 + Math.random() * 10;
+    const mqttClient = mqtt.connect(mqttUrl, options);
 
-        // Agregar nuevos datos a la gráfica
+    mqttClient.on("connect", () => {
+      console.log("Conectado al broker MQTT");
+      mqttClient.subscribe("autoclaves/datos", (err) => {
+        if (!err) {
+          console.log("Suscrito al tema autoclaves/datos");
+        } else {
+          console.error("Error al suscribirse:", err);
+        }
+      });
+    });
+
+    mqttClient.on("error", (err) => {
+      console.error("Error de conexión:", err);
+      mqttClient.end();
+    });
+
+    setClient(mqttClient);
+
+    return () => {
+      if (mqttClient) {
+        mqttClient.end();
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (client) {
+      client.on("message", (topic: string, message: Buffer) => {
+        const payload = JSON.parse(message.toString());
+        console.log("Mensaje recibido:", payload);
+
+        const currentTime = new Date().getTime();
+
         setChartPress((prevData) => [
           ...prevData,
-          { time: totalTime, value: newPressure }, // Usar `totalTime` para el tiempo en segundos
+          { time: currentTime, value: payload.presion },
         ]);
         setChartTemp((prevData) => [
           ...prevData,
-          { time: totalTime, value: newTemperature }, // Usar `totalTime` para el tiempo en segundos
+          { time: currentTime, value: payload.temperatura },
         ]);
-      }, 1000);
+
+        setTotalTime((prevTime) => prevTime + 1);
+      });
     }
-    return () => clearInterval(timer);
-  }, [isRunning, totalTime]);
+  }, [client]);
 
   const handleStart = () => setIsRunning(true);
+
   const handleCancel = () => {
     setIsRunning(false);
     setTotalTime(0);
-    setChartPress([{ time: -1, value: 30.0 }]);
-    setChartTemp([{ time: -1, value: 5.0 }]);
+    setChartPress([]);
+    setChartTemp([]);
   };
 
   const formatTime = (seconds: number): string => {
@@ -106,7 +146,9 @@ export default function Page() {
             </CardHeader>
             <CardContent className="flex items-center justify-center bg-sky-100 m-4">
               <div className="text-5xl font-bold mt-2">
-                {chartPress[totalTime].value.toFixed(2)}
+                {chartPress.length > 0
+                  ? chartPress[chartPress.length - 1].value.toFixed(2)
+                  : "0.00"}
               </div>
             </CardContent>
           </Card>
@@ -122,7 +164,9 @@ export default function Page() {
             </CardHeader>
             <CardContent className="flex items-center justify-center bg-sky-100 m-4">
               <div className="text-5xl font-bold mt-2">
-                {chartTemp[totalTime].value.toFixed(2)}
+                {chartTemp.length > 0
+                  ? chartTemp[chartTemp.length - 1].value.toFixed(2)
+                  : "0.00"}
               </div>
             </CardContent>
           </Card>
@@ -151,7 +195,7 @@ export default function Page() {
               <DialogHeader>
                 <DialogTitle>Cancelar</DialogTitle>
                 <DialogDescription>
-                  Esta seguro que quiere parar el ciclo.
+                  ¿Está seguro que desea parar el ciclo?
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter className="sm:justify-start">
@@ -170,7 +214,9 @@ export default function Page() {
         </div>
 
         <div className="lg:col-span-1 space-y-28">
+          {/* Gráfica de presión */}
           <ChartComponent data={chartPress} />
+          {/* Gráfica de temperatura */}
           <ChartComponent data={chartTemp} />
         </div>
       </div>
