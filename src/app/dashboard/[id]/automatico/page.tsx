@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { Gauge, Thermometer, Timer } from "lucide-react";
 import { ChartComponent } from "@/components/autoclaves/chart";
-import mqtt from "mqtt"; // Importamos la librería mqtt
+import { connectMqttClient } from "@/app/api/mqtt";
 
 export default function Page() {
   const [totalTime, setTotalTime] = useState<number>(0);
@@ -35,40 +35,12 @@ export default function Page() {
   const [client, setClient] = useState<any>(null);
 
   useEffect(() => {
-    // Configurar el cliente MQTT
-    const mqttUrl = "wss://fe6ef6f5.ala.us-east-1.emqxsl.com:8084/mqtt"; // URL del broker MQTT sobre WebSocket seguro
-    const options = {
-      username: "casfer", // Si requiere autenticación
-      password: "casfer",
-      reconnectPeriod: 1000, // Intentar reconectar cada segundo
-      connectTimeout: 30 * 1000,
-      // Si el broker tiene certificados autofirmados, puedes usar esta opción
-      // rejectUnauthorized: false,
-    };
-
-    const mqttClient = mqtt.connect(mqttUrl, options);
-
-    mqttClient.on("connect", () => {
-      console.log("Conectado al broker MQTT");
-      mqttClient.subscribe("autoclaves/datos", (err) => {
-        if (!err) {
-          console.log("Suscrito al tema autoclaves/datos");
-        } else {
-          console.error("Error al suscribirse:", err);
-        }
-      });
-    });
-
-    mqttClient.on("error", (err) => {
-      console.error("Error de conexión:", err);
-      mqttClient.end();
-    });
-
+    const mqttClient = connectMqttClient(); // Conectar cliente MQTT
     setClient(mqttClient);
 
     return () => {
       if (mqttClient) {
-        mqttClient.end();
+        mqttClient.end(); // Cerrar conexión al desmontar el componente
       }
     };
   }, []);
@@ -95,9 +67,19 @@ export default function Page() {
     }
   }, [client]);
 
-  const handleStart = () => setIsRunning(true);
+  const handleStart = () => {
+    if (client) {
+      // Publicar un mensaje al ESP para que comience a enviar datos
+      client.publish("autoclaves/control", "start");
+      setIsRunning(true);
+    }
+  };
 
   const handleCancel = () => {
+    if (client) {
+      // Publicar un mensaje al ESP para que detenga el envío de datos
+      client.publish("autoclaves/control", "stop");
+    }
     setIsRunning(false);
     setTotalTime(0);
     setChartPress([]);
