@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Gauge, Thermometer, Circle, CircleCheckBig } from "lucide-react";
 import { supabase } from "@/utils/supabaseClient";
@@ -9,7 +10,9 @@ import { connectMqttClient } from "@/app/api/mqtt";
 
 export default function Page({ params }: { params: { id: string } }) {
   const [isDoorOpen, setIsDoorOpen] = useState(false);
-  const [agua, setAgua] = useState(false);
+  const [isResisAlta, setIsResisAlta] = useState(false);
+  const [isResisBaja, setIsResisBaja] = useState(false);
+  const [isEVDrenaje, setIsEVDrenaje] = useState(false);
   const [type, setType] = useState<number>();
   const [client, setClient] = useState<any>(null);
   const [chartPress, setChartPress] = useState<{ time: any; value: number }[]>(
@@ -53,21 +56,35 @@ export default function Page({ params }: { params: { id: string } }) {
   const handleDoorOpenClick = () => {
     if (client) {
       // Publicar un mensaje al ESP para que comience a enviar datos
-      client.publish("autoclaves/control", "start");
-      setIsDoorOpen(true);
+      const message = isDoorOpen ? "0" : "1";
+      client.publish("autoclaves/puerta", message);
+      setIsDoorOpen(!isDoorOpen);
     }
   };
-  const handleDoorCloseClick = () => {
+  const handleResisAltaClick = () => {
     if (client) {
       // Publicar un mensaje al ESP para que comience a enviar datos
-      client.publish("autoclaves/control", "stop");
-      setIsDoorOpen(false);
+      const message = isResisAlta ? "0" : "1";
+      client.publish("autoclaves/resis/alta", message);
+      setIsResisAlta(!isResisAlta);
     }
   };
-  const handleAguaClick = () => {
-    setAgua(!agua);
+  const handleResisBajaClick = () => {
+    if (client) {
+      // Publicar un mensaje al ESP para que comience a enviar datos
+      const message = isResisBaja ? "0" : "1";
+      client.publish("autoclaves/resis/baja", message);
+      setIsResisBaja(!isResisBaja);
+    }
   };
-
+  const handleEVDrenajeClick = () => {
+    if (client) {
+      // Publicar un mensaje al ESP para que comience a enviar datos
+      const message = isEVDrenaje ? "0" : "1";
+      client.publish("autoclaves/ev", message);
+      setIsEVDrenaje(!isEVDrenaje);
+    }
+  };
   useEffect(() => {
     const fetchAutoclaveType = async () => {
       const { data, error } = await supabase
@@ -94,64 +111,40 @@ export default function Page({ params }: { params: { id: string } }) {
       <div className="lg:grid lg:grid-cols-2">
         {/* Grid de botones */}
         <div className="lg:col-span-1 mt-10">
-          <div className="grid grid-cols-3 gap-4 mb-4">
-            <Button className="w-full text-lg py-3 bg-sky-500">
-              Resistencia
-            </Button>
-            <Button className="w-full text-lg py-3 bg-sky-500">
-              EV drenaje
-            </Button>
+          <div className="flex gap-4">
+            <div className="flex items-center space-x-2">
+              <Switch id="resis-alta" onCheckedChange={handleResisAltaClick} />
+              <Label htmlFor="resis-alta">Resistencia Alta</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch id="resis-baja" onCheckedChange={handleResisBajaClick} />
+              <Label htmlFor="resis-baja">Resistencia Baja</Label>
+            </div>
             {(type === 2 || type === 4) && (
-              <Button
-                className="w-full text-lg py-3 bg-sky-500"
-                onClick={handleAguaClick}
-              >
-                Bomba de agua
-              </Button>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="ev-drenaje"
+                  onCheckedChange={handleEVDrenajeClick}
+                />
+                <Label htmlFor="ev--drenje">EV Drenaje</Label>
+              </div>
+            )}
+
+            {(type === 3 || type === 4) && (
+              <div className="flex items-center space-x-2">
+                <Switch id="puerta" onCheckedChange={handleDoorOpenClick} />
+                <Label htmlFor="puerta">Puerta</Label>
+              </div>
             )}
           </div>
-          {(type === 3 || type === 4) && (
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <Button
-                className="w-full text-lg py-3 bg-sky-500"
-                onClick={handleDoorOpenClick}
-              >
-                Apertura de puerta
-              </Button>
-              <Button
-                className="w-full text-lg py-3 bg-sky-500"
-                onClick={handleDoorCloseClick}
-              >
-                Cierre de puerta
-              </Button>
-            </div>
-          )}
-          {type === 4 && (
-            <div className="grid grid-cols-2 gap-4">
-              <Button className="w-full text-lg py-3 bg-sky-500">
-                EV Despresurizacion
-              </Button>
-            </div>
-          )}
-
           <div className="flex items-center mt-10">
-            {agua ? (
+            {isDoorOpen ? (
               <CircleCheckBig className="mr-2 text-sky-500" />
             ) : (
               <Circle className="mr-2" />
             )}
             Puerta
           </div>
-          {(type === 2 || type === 4) && (
-            <div className="flex items-center mt-4">
-              {agua ? (
-                <CircleCheckBig className="mr-2 text-sky-500" />
-              ) : (
-                <Circle className="mr-2" />
-              )}
-              Nivel de agua
-            </div>
-          )}
           {(type === 3 || type === 4) && (
             <>
               <div className="flex items-center mt-4">
@@ -160,7 +153,7 @@ export default function Page({ params }: { params: { id: string } }) {
                 ) : (
                   <Circle className="mr-2" />
                 )}
-                Puerta abierta
+                F. Carrera Cerrado
               </div>
               <div className="flex items-center mt-4">
                 {isDoorOpen ? (
@@ -168,7 +161,7 @@ export default function Page({ params }: { params: { id: string } }) {
                 ) : (
                   <CircleCheckBig className="mr-2 text-sky-500" />
                 )}
-                Puerta cerrada
+                F. Carrera Abierto
               </div>
             </>
           )}
