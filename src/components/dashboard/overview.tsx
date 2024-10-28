@@ -1,40 +1,51 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+"use client";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/utils/supabaseClient";
+import React, { useState, useEffect } from "react";
 
-export default async function Overview() {
-  const { count: autoclavesInCbba, error: totalError } = await supabase
-    .from("autoclaves")
-    .select("*", { count: "exact" })
-    .eq("location", "Cochabamba"); // Solicita solo el recuento
+export default function Overview() {
+  const [countCbba, setCountCbba] = useState<number>(0);
+  const [countOr, setCountOr] = useState<number>(0);
 
-  if (totalError) {
-    console.error(
-      "Error al obtener el total de autoclaves:",
-      totalError.message
-    );
-    return;
-  }
+  useEffect(() => {
+    const fetchCountCbba = async () => {
+      const { count, error } = await supabase
+        .from("autoclaves")
+        .select("*", { count: "exact" })
+        .eq("location", "Cochabamba");
 
-  const { count: autoclavesInOr, error: oruroError } = await supabase
-    .from("autoclaves")
-    .select("*", { count: "exact" })
-    .eq("location", "Oruro"); // Filtra por 'location' igual a 'Oruro'
+      if (error) {
+        console.error("Error fetching autoclaves:", error);
+      } else {
+        setCountCbba(count || 0);
+      }
+    };
 
-  if (oruroError) {
-    console.error("Error al obtener autoclaves en Oruro:", oruroError.message);
-    return;
-  }
+    fetchCountCbba();
+  }, []);
+
+  useEffect(() => {
+    const fetchCountOr = async () => {
+      const { count, error } = await supabase
+        .from("autoclaves")
+        .select("*", { count: "exact" })
+        .eq("location", "Oruro");
+
+      if (error) {
+        console.error("Error fetching autoclaves in Oruro:", error);
+      } else {
+        setCountOr(count || 0);
+      }
+    };
+
+    fetchCountOr();
+  }, []);
 
   return (
-    <aside className="w-1/4 p-4 ml-4">
-      <Card className="mb-4">
+    <main className="flex flex-col md:flex-row p-4 w-full gap-4">
+      <Card className="flex-1">
         <CardHeader>
           <CardTitle>Total Equipos</CardTitle>
         </CardHeader>
@@ -42,16 +53,16 @@ export default async function Overview() {
           <div className="grid w-full items-center gap-4">
             <div className="flex flex-col space-y-1.5">
               <Label>Cochabamba</Label>
-              <div className="text-2xl font-bold">{autoclavesInCbba}</div>
+              <div className="text-2xl font-bold">{countCbba}</div>
             </div>
             <div className="flex flex-col space-y-1.5">
               <Label>Oruro</Label>
-              <div className="text-2xl font-bold">{autoclavesInOr}</div>
+              <div className="text-2xl font-bold">{countOr}</div>
             </div>
           </div>
         </CardContent>
       </Card>
-      <Card className="mb-4">
+      <Card className="flex-1">
         <CardHeader>
           <CardTitle>Fallas del ultimo mes</CardTitle>
         </CardHeader>
@@ -67,7 +78,7 @@ export default async function Overview() {
           </div>
         </CardContent>
       </Card>
-      <Card className="mb-4">
+      <Card className="flex-1">
         <CardHeader>
           <CardTitle>Fallas totales</CardTitle>
         </CardHeader>
@@ -80,6 +91,6 @@ export default async function Overview() {
           </div>
         </CardContent>
       </Card>
-    </aside>
+    </main>
   );
 }

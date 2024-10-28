@@ -21,7 +21,7 @@ export default function RootLayout({
     }
 
     if (role !== "ADMIN") {
-      router.push(`/dashboard/${autoclaveId}/manual`);
+      router.push(`/dashboard/${autoclaveId}/automatico`);
     }
   }, [user, role, autoclaveId, loading, router]);
 

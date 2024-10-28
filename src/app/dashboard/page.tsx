@@ -12,13 +12,11 @@ export default function DashboardPage() {
         </aside>
         <AvatarProfile />
       </header>
-      <div className="flex flex-1 mt-10 space-x-3">
-        <Overview />
-        <section className="flex-1 p-4">
-          <div className="text-2xl font-bold mb-4">Autoclaves</div>
-          <AutoclaveTable />
-        </section>
-      </div>
+      <Overview />
+      <section className="flex-1 p-4">
+        <div className="text-2xl font-bold mb-4">Autoclaves</div>
+        <AutoclaveTable />
+      </section>
     </main>
   );
 }

@@ -100,7 +100,7 @@ export default function Page({ params }: { params: { id: string } }) {
   return (
     <main className="flex flex-col">
       <div className="text-3xl font-bold mb-4">Información</div>
-      <Card className="lg:w-1/2 mt-4">
+      <Card className="lg:w-1/3 mt-4">
         <CardHeader>
           <CardTitle>Editar información</CardTitle>
           <CardDescription>Actualiza los datos del autoclave.</CardDescription>
@@ -115,6 +115,7 @@ export default function Page({ params }: { params: { id: string } }) {
                   value={formData.name}
                   onChange={handleChange}
                   placeholder="Nombre del autoclave"
+                  disabled={role !== "ADMIN"}
                 />
               </div>
               <div className="flex flex-col space-y-1.5">
@@ -124,6 +125,7 @@ export default function Page({ params }: { params: { id: string } }) {
                   value={formData.location}
                   onChange={handleChange}
                   placeholder="Ubicación del autoclave"
+                  disabled={role !== "ADMIN"}
                 />
               </div>
               <div className="flex flex-col space-y-1.5">
@@ -133,6 +135,7 @@ export default function Page({ params }: { params: { id: string } }) {
                   value={formData.type}
                   onChange={handleChange}
                   placeholder="Tipo del autoclave"
+                  disabled={role !== "ADMIN"}
                 />
               </div>
             </div>

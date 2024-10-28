@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useTheme } from "next-themes";
 import {
   createChart,
   ColorType,
@@ -10,36 +11,63 @@ import {
 type ChartComponentProps = {
   data: { time: Time; value: number }[];
   colors?: {
-    backgroundColor?: string;
-    lineColor?: string;
-    textColor?: string;
-    areaTopColor?: string;
-    areaBottomColor?: string;
+    lightMode?: {
+      backgroundColor?: string;
+      lineColor?: string;
+      textColor?: string;
+      areaTopColor?: string;
+      areaBottomColor?: string;
+    };
+    darkMode?: {
+      backgroundColor?: string;
+      lineColor?: string;
+      textColor?: string;
+      areaTopColor?: string;
+      areaBottomColor?: string;
+    };
   };
 };
 
 export const ChartComponent: React.FC<ChartComponentProps> = ({
   data,
-  colors: {
-    backgroundColor = "white",
-    lineColor = "#0ea5e9",
-    textColor = "black",
-    areaTopColor = "#0ea5e9",
-    areaBottomColor = "rgba(0, 150, 255, 0.2)",
-  } = {},
+  colors = {
+    lightMode: {
+      backgroundColor: "white",
+      lineColor: "#0ea5e9",
+      textColor: "black",
+      areaTopColor: "#0ea5e9",
+      areaBottomColor: "rgba(0, 150, 255, 0.2)",
+    },
+    darkMode: {
+      backgroundColor: "#020817",
+      lineColor: "#3b82f6",
+      textColor: "#f3f4f6",
+      areaTopColor: "#3b82f6",
+      areaBottomColor: "rgba(59, 130, 246, 0.2)",
+    },
+  },
 }) => {
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Area"> | null>(null);
+  const { theme } = useTheme();
 
   useEffect(() => {
     if (chartContainerRef.current) {
+      const isDarkMode = theme === "dark";
       const chart = createChart(chartContainerRef.current, {
         layout: {
-          background: { type: ColorType.Solid, color: backgroundColor },
-          textColor,
+          background: {
+            type: ColorType.Solid,
+            color: isDarkMode
+              ? colors.darkMode!.backgroundColor!
+              : colors.lightMode!.backgroundColor!,
+          },
+          textColor: isDarkMode
+            ? colors.darkMode!.textColor!
+            : colors.lightMode!.textColor!,
         },
-        width: chartContainerRef.current.clientWidth,
+        width: chartContainerRef.current.clientWidth + 50,
         height: 300,
       });
 
@@ -47,9 +75,15 @@ export const ChartComponent: React.FC<ChartComponentProps> = ({
       chart.timeScale().fitContent();
 
       const newSeries = chart.addAreaSeries({
-        lineColor,
-        topColor: areaTopColor,
-        bottomColor: areaBottomColor,
+        lineColor: isDarkMode
+          ? colors.darkMode!.lineColor!
+          : colors.lightMode!.lineColor!,
+        topColor: isDarkMode
+          ? colors.darkMode!.areaTopColor!
+          : colors.lightMode!.areaTopColor!,
+        bottomColor: isDarkMode
+          ? colors.darkMode!.areaBottomColor!
+          : colors.lightMode!.areaBottomColor!,
       });
 
       seriesRef.current = newSeries;
@@ -73,14 +107,7 @@ export const ChartComponent: React.FC<ChartComponentProps> = ({
         }
       };
     }
-  }, [
-    data,
-    backgroundColor,
-    lineColor,
-    textColor,
-    areaTopColor,
-    areaBottomColor,
-  ]);
+  }, [data, theme, colors]);
 
   useEffect(() => {
     if (seriesRef.current) {
@@ -88,5 +115,5 @@ export const ChartComponent: React.FC<ChartComponentProps> = ({
     }
   }, [data]);
 
-  return <div ref={chartContainerRef} className="w-full h-64" />;
+  return <div ref={chartContainerRef} className="w-full" />;
 };

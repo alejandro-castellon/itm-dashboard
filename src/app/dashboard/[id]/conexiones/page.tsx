@@ -18,7 +18,7 @@ import { connectMqttClient } from "@/app/api/mqtt";
 export default function Page({ params }: { params: { id: string } }) {
   const [ssid, setSsid] = useState("");
   const [password, setPassword] = useState("");
-  const [client, setClient] = useState<any>(null);
+  const [client] = useState(connectMqttClient()); // Usar el cliente MQTT del layout
 
   const [isDirty, setIsDirty] = useState(false);
   const [originalData, setOriginalData] = useState<any>({});
@@ -28,17 +28,6 @@ export default function Page({ params }: { params: { id: string } }) {
   });
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    const mqttClient = connectMqttClient(); // Conectar cliente MQTT
-    setClient(mqttClient);
-
-    return () => {
-      if (mqttClient) {
-        mqttClient.end(); // Cerrar conexión al desmontar el componente
-      }
-    };
-  }, []);
 
   useEffect(() => {
     const fetchAutoclave = async () => {
@@ -111,7 +100,7 @@ export default function Page({ params }: { params: { id: string } }) {
   return (
     <main className=" flex flex-col">
       <div className="text-3xl font-bold mb-4">Conexiones</div>
-      <Card className="w-[350px] mt-4">
+      <Card className="lg:w-1/3 mt-4">
         <CardHeader>
           <CardTitle>Editar conexiones</CardTitle>
           <CardDescription>Realiza cambios a tu conexion.</CardDescription>

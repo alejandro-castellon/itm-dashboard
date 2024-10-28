@@ -48,7 +48,7 @@ export default function LoginForm() {
       if (role === "ADMIN") {
         router.push("/dashboard");
       } else {
-        router.push(`/dashboard/${autoclaveId}/manual`);
+        router.push(`/dashboard/${autoclaveId}/automatico`);
       }
     }
   }, [user, role, error, router]);
@@ -79,7 +79,7 @@ export default function LoginForm() {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-6 w-full max-w-sm mx-auto"
+        className="space-y-3 lg:space-y-6 w-3/4 lg:w-full max-w-sm mx-auto"
       >
         {(error || localError) && (
           <p className="text-red-500">{error || localError}</p>

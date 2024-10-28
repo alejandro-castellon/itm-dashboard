@@ -32,18 +32,7 @@ export default function Page() {
   const [chartTemp, setChartTemp] = useState<{ time: any; value: number }[]>(
     []
   );
-  const [client, setClient] = useState<any>(null);
-
-  useEffect(() => {
-    const mqttClient = connectMqttClient(); // Conectar cliente MQTT
-    setClient(mqttClient);
-
-    return () => {
-      if (mqttClient) {
-        mqttClient.end(); // Cerrar conexión al desmontar el componente
-      }
-    };
-  }, []);
+  const [client] = useState(connectMqttClient()); // Usar el cliente MQTT del layout
 
   useEffect(() => {
     if (client) {
@@ -100,8 +89,8 @@ export default function Page() {
 
       <div className="lg:grid lg:grid-cols-2">
         {/* Card de Tiempo Total */}
-        <Card className="lg:col-span-1 lg:w-3/4 mb-4">
-          <CardContent className="flex items-center justify-center bg-sky-100 m-4">
+        <Card className="w-full lg:w-3/4 mb-4 mx-auto lg:mx-0">
+          <CardContent className="flex items-center justify-center bg-sky-100 dark:bg-gray-800 m-4">
             <div className="text-5xl font-bold mt-3">
               {formatTime(totalTime)}
             </div>
@@ -115,7 +104,7 @@ export default function Page() {
         </Card>
 
         {/* Contenedor horizontal para alinear los Cards de presión y temperatura */}
-        <div className="lg:col-span-1 flex space-x-4 mb-4">
+        <div className="flex flex-col lg:flex-row lg:col-span-1 space-y-4 lg:space-y-0 lg:space-x-4 mb-4">
           <Card className="flex-1">
             <CardHeader className="pb-0">
               <CardTitle className="flex items-center justify-between">
@@ -126,7 +115,7 @@ export default function Page() {
                 Bar
               </CardTitle>
             </CardHeader>
-            <CardContent className="flex items-center justify-center bg-sky-100 m-4">
+            <CardContent className="flex items-center justify-center bg-sky-100 dark:bg-gray-800 m-4">
               <div className="text-5xl font-bold mt-2">
                 {chartPress.length > 0
                   ? chartPress[chartPress.length - 1].value.toFixed(2)
@@ -144,7 +133,7 @@ export default function Page() {
                 °C
               </CardTitle>
             </CardHeader>
-            <CardContent className="flex items-center justify-center bg-sky-100 m-4">
+            <CardContent className="flex items-center justify-center bg-sky-100 dark:bg-gray-800 m-4">
               <div className="text-5xl font-bold mt-2">
                 {chartTemp.length > 0
                   ? chartTemp[chartTemp.length - 1].value.toFixed(2)
@@ -156,9 +145,9 @@ export default function Page() {
       </div>
 
       <div className="lg:grid lg:grid-cols-2">
-        <div className="lg:col-span-1 flex lg:flex-col lg:items-start items-center justify-center gap-4 my-4">
+        <div className="lg:col-span-1 flex lg:flex-col lg:items-start items-center justify-center gap-4 my-4 pb-10">
           <Button
-            className="bg-sky-500 px-6 py-3 text-xl w-3/4"
+            className="bg-sky-500 px-6 py-3 text-xl w-full lg:w-3/4"
             onClick={handleStart}
             disabled={isRunning}
           >
@@ -167,7 +156,7 @@ export default function Page() {
           <Dialog>
             <DialogTrigger asChild>
               <Button
-                className="bg-sky-500 px-6 py-3 text-xl w-3/4"
+                className="bg-sky-500 px-6 py-3 text-xl w-full lg:w-3/4"
                 disabled={!isRunning}
               >
                 Cancelar
@@ -195,7 +184,7 @@ export default function Page() {
           </Dialog>
         </div>
 
-        <div className="lg:col-span-1 space-y-28">
+        <div className="space-y-8 lg:space-y-12 lg:col-span-1">
           {/* Gráfica de presión */}
           <ChartComponent data={chartPress} />
           {/* Gráfica de temperatura */}

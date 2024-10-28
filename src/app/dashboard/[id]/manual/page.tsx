@@ -14,24 +14,13 @@ export default function Page({ params }: { params: { id: string } }) {
   const [isResisBaja, setIsResisBaja] = useState(false);
   const [isEVDrenaje, setIsEVDrenaje] = useState(false);
   const [type, setType] = useState<number>();
-  const [client, setClient] = useState<any>(null);
+  const [client] = useState(connectMqttClient()); // Usar el cliente MQTT del layout
   const [chartPress, setChartPress] = useState<{ time: any; value: number }[]>(
     []
   );
   const [chartTemp, setChartTemp] = useState<{ time: any; value: number }[]>(
     []
   );
-
-  useEffect(() => {
-    const mqttClient = connectMqttClient(); // Conectar cliente MQTT
-    setClient(mqttClient);
-
-    return () => {
-      if (mqttClient) {
-        mqttClient.end(); // Cerrar conexión al desmontar el componente
-      }
-    };
-  }, []);
 
   useEffect(() => {
     if (client) {
@@ -111,7 +100,7 @@ export default function Page({ params }: { params: { id: string } }) {
       <div className="lg:grid lg:grid-cols-2">
         {/* Grid de botones */}
         <div className="lg:col-span-1 mt-10">
-          <div className="flex gap-4">
+          <div className="flex flex-col gap-4">
             <div className="flex items-center space-x-2">
               <Switch id="resis-alta" onCheckedChange={handleResisAltaClick} />
               <Label htmlFor="resis-alta">Resistencia Alta</Label>
@@ -179,7 +168,7 @@ export default function Page({ params }: { params: { id: string } }) {
                 Bar
               </CardTitle>
             </CardHeader>
-            <CardContent className="flex items-center justify-center bg-sky-100 m-4">
+            <CardContent className="flex items-center justify-center bg-sky-100 dark:bg-gray-800 m-4">
               <div className="text-5xl font-bold mt-2">
                 {chartPress.length > 0
                   ? chartPress[chartPress.length - 1].value.toFixed(2)
@@ -197,7 +186,7 @@ export default function Page({ params }: { params: { id: string } }) {
                 °C
               </CardTitle>
             </CardHeader>
-            <CardContent className="flex items-center justify-center bg-sky-100 m-4">
+            <CardContent className="flex items-center justify-center bg-sky-100 dark:bg-gray-800 m-4">
               <div className="text-5xl font-bold mt-2">
                 {chartTemp.length > 0
                   ? chartTemp[chartTemp.length - 1].value.toFixed(2)
@@ -217,7 +206,7 @@ export default function Page({ params }: { params: { id: string } }) {
                     m3/h
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="flex items-center justify-center bg-sky-100 m-4">
+                <CardContent className="flex items-center justify-center bg-sky-100 dark:bg-gray-800 m-4">
                   <div className="text-5xl font-bold mt-2">5.00</div>
                 </CardContent>
               </Card>
@@ -231,7 +220,7 @@ export default function Page({ params }: { params: { id: string } }) {
                     L
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="flex items-center justify-center bg-sky-100 m-4">
+                <CardContent className="flex items-center justify-center bg-sky-100 dark:bg-gray-800 m-4">
                   <div className="text-5xl font-bold mt-2">35.00</div>
                 </CardContent>
               </Card>
