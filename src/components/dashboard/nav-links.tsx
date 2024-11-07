@@ -6,7 +6,7 @@ import clsx from "clsx";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/utils/AuthContext";
 import { File, Info, LogOut, RotateCw, Sliders, Wifi } from "lucide-react";
-import { disconnectMqttClient } from "@/app/api/mqtt";
+import { disconnectMqttClient } from "@/utils/mqtt";
 
 export default function NavLinks() {
   const { user, role, loading, logout } = useAuth();

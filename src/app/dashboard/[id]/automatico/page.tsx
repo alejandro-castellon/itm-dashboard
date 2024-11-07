@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { Gauge, Thermometer, Timer } from "lucide-react";
 import { ChartComponent } from "@/components/autoclaves/chart";
-import { connectMqttClient } from "@/app/api/mqtt";
+import { connectMqttClient } from "@/utils/mqtt";
 
 export default function Page() {
   const [totalTime, setTotalTime] = useState<number>(0);
@@ -32,47 +32,79 @@ export default function Page() {
   const [chartTemp, setChartTemp] = useState<{ time: any; value: number }[]>(
     []
   );
-  const [client] = useState(connectMqttClient()); // Usar el cliente MQTT del layout
+  const [client] = useState(connectMqttClient());
+  const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
 
+  // Obtener todos los datos al cargar la página
   useEffect(() => {
-    if (client) {
-      client.on("message", (topic: string, message: Buffer) => {
-        const payload = JSON.parse(message.toString());
-        console.log("Mensaje recibido:", payload);
+    const fetchAllData = async () => {
+      try {
+        const response = await fetch("/api/getData");
+        if (!response.ok) {
+          throw new Error("Error al obtener todos los datos");
+        }
+        const data = await response.json();
 
-        const currentTime = new Date().getTime();
+        // Procesar datos para las gráficas
+        const newPressData = data.map((item: any) => ({
+          time: item.timestamp,
+          value: item.presion,
+        }));
+        const newTempData = data.map((item: any) => ({
+          time: item.timestamp,
+          value: item.temperatura,
+        }));
+        setChartPress(newPressData);
+        setChartTemp(newTempData);
+      } catch (error) {
+        console.error("Error al obtener datos:", error);
+      }
+    };
 
-        setChartPress((prevData) => [
-          ...prevData,
-          { time: currentTime, value: payload.presion },
-        ]);
-        setChartTemp((prevData) => [
-          ...prevData,
-          { time: currentTime, value: payload.temperatura },
-        ]);
-
-        setTotalTime((prevTime) => prevTime + 1);
-      });
-    }
-  }, [client]);
+    fetchAllData();
+  }, []);
 
   const handleStart = () => {
     if (client) {
       // Publicar un mensaje al ESP para que comience a enviar datos
-      client.publish("autoclaves/control", "start");
+      client.publish("autoclaves/puerta", "1");
       setIsRunning(true);
+
+      if (client) {
+        client.on("message", (topic: string, message: Buffer) => {
+          const payload = JSON.parse(message.toString());
+          console.log("Mensaje recibido:", payload);
+
+          const currentTime = new Date(Date.now());
+          currentTime.setHours(currentTime.getHours() - 4);
+          setChartPress((prevData) => [
+            ...prevData,
+            { time: currentTime, value: payload.presion },
+          ]);
+          setChartTemp((prevData) => [
+            ...prevData,
+            { time: currentTime, value: payload.temperatura },
+          ]);
+
+          setTotalTime((prevTime) => prevTime + 1);
+        });
+      }
     }
   };
 
   const handleCancel = () => {
     if (client) {
       // Publicar un mensaje al ESP para que detenga el envío de datos
-      client.publish("autoclaves/control", "stop");
+      client.publish("autoclaves/puerta", "0");
     }
     setIsRunning(false);
     setTotalTime(0);
-    setChartPress([]);
-    setChartTemp([]);
+
+    // Limpia el intervalo
+    if (intervalId) {
+      clearInterval(intervalId);
+      setIntervalId(null);
+    }
   };
 
   const formatTime = (seconds: number): string => {

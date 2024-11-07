@@ -6,7 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Gauge, Thermometer, Circle, CircleCheckBig } from "lucide-react";
 import { supabase } from "@/utils/supabaseClient";
-import { connectMqttClient } from "@/app/api/mqtt";
+import { connectMqttClient } from "@/utils/mqtt";
 
 export default function Page({ params }: { params: { id: string } }) {
   const [isDoorOpen, setIsDoorOpen] = useState(false);
@@ -26,7 +26,6 @@ export default function Page({ params }: { params: { id: string } }) {
     if (client) {
       client.on("message", (topic: string, message: Buffer) => {
         const payload = JSON.parse(message.toString());
-        console.log("Mensaje recibido:", payload);
 
         const currentTime = new Date().getTime();
 

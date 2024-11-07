@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
 import { supabase } from "@/utils/supabaseClient";
-import { connectMqttClient } from "@/app/api/mqtt";
+import { connectMqttClient } from "@/utils/mqtt";
 
 export default function Page({ params }: { params: { id: string } }) {
   const [ssid, setSsid] = useState("");

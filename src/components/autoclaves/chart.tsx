@@ -52,6 +52,12 @@ export const ChartComponent: React.FC<ChartComponentProps> = ({
   const seriesRef = useRef<ISeriesApi<"Area"> | null>(null);
   const { theme } = useTheme();
 
+  // Convertir los timestamps ISO a la hora local del usuario
+  const convertedData = data.map((item) => ({
+    ...item,
+    time: (new Date(item.time as string).getTime() / 1000) as Time, // Convierte a segundos
+  }));
+
   useEffect(() => {
     if (chartContainerRef.current) {
       const isDarkMode = theme === "dark";
@@ -69,6 +75,10 @@ export const ChartComponent: React.FC<ChartComponentProps> = ({
         },
         width: chartContainerRef.current.clientWidth + 50,
         height: 300,
+        timeScale: {
+          timeVisible: true,
+          secondsVisible: true,
+        },
       });
 
       chartRef.current = chart;
@@ -87,7 +97,7 @@ export const ChartComponent: React.FC<ChartComponentProps> = ({
       });
 
       seriesRef.current = newSeries;
-      newSeries.setData(data);
+      newSeries.setData(convertedData);
 
       const handleResize = () => {
         if (chartRef.current) {
@@ -101,19 +111,18 @@ export const ChartComponent: React.FC<ChartComponentProps> = ({
 
       return () => {
         window.removeEventListener("resize", handleResize);
-
         if (chartRef.current) {
           chartRef.current.remove();
         }
       };
     }
-  }, [data, theme, colors]);
+  }, [convertedData, theme, colors]);
 
   useEffect(() => {
     if (seriesRef.current) {
-      seriesRef.current.setData(data);
+      seriesRef.current.setData(convertedData);
     }
-  }, [data]);
+  }, [convertedData]);
 
   return <div ref={chartContainerRef} className="w-full" />;
 };
