@@ -13,6 +13,19 @@ export async function POST(req: Request) {
     // Crear el timestamp actual y restar 4 horas
     const timestamp = new Date(Date.now());
     timestamp.setHours(timestamp.getHours() - 4); // Resta 4 horas
+    timestamp.setMilliseconds(0); // Elimina los milisegundos para tener el segundo limpio
+
+    // Comprobar si el timestamp es igual al anterior
+    if (timestamp.getTime() === lastTimestamp) {
+      secondCounter++; // Si es el mismo segundo, incrementar el contador
+      // Asegurarse de que los milisegundos se incrementen de forma significativa
+      timestamp.setMilliseconds(secondCounter * 10); // Incrementa 10ms cada vez
+    } else {
+      secondCounter = 0; // Si es un segundo nuevo, reiniciar el contador
+    }
+
+    // Actualizar el último timestamp utilizado
+    lastTimestamp = timestamp.getTime();
 
     // Crear el documento para insertar en la base de datos con el timestamp ajustado
     const document = { temperatura, presion, tiempo, timestamp };
