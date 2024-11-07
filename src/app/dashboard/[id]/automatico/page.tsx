@@ -70,25 +70,30 @@ export default function Page() {
       client.publish("autoclaves/puerta", "1");
       setIsRunning(true);
 
-      if (client) {
-        client.on("message", (topic: string, message: Buffer) => {
-          const payload = JSON.parse(message.toString());
-          console.log("Mensaje recibido:", payload);
+      const interval = setInterval(async () => {
+        try {
+          const response = await fetch("/api/getLatestData");
+          if (!response.ok) {
+            throw new Error("Error al obtener el último valor");
+          }
+          const data = await response.json();
+          const lastPressData = {
+            time: data.timestamp, // Usar el timestamp tal cual
+            value: data.presion,
+          };
+          const lastTempData = {
+            time: data.timestamp, // Usar el timestamp tal cual
+            value: data.temperatura,
+          };
 
-          const currentTime = new Date(Date.now());
-          currentTime.setHours(currentTime.getHours() - 4);
-          setChartPress((prevData) => [
-            ...prevData,
-            { time: currentTime, value: payload.presion },
-          ]);
-          setChartTemp((prevData) => [
-            ...prevData,
-            { time: currentTime, value: payload.temperatura },
-          ]);
+          setChartPress((prevData) => [...prevData, lastPressData]);
+          setChartTemp((prevData) => [...prevData, lastTempData]);
+        } catch (error) {
+          console.error("Error al obtener el último valor:", error);
+        }
+      }, 1000);
 
-          setTotalTime((prevTime) => prevTime + 1);
-        });
-      }
+      setIntervalId(interval);
     }
   };
 

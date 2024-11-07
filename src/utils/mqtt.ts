@@ -25,17 +25,6 @@ export const connectMqttClient = (): MqttClient => {
     mqttClient!.end();
   });
 
-  mqttClient.on("message", async (topic, message) => {
-    const data = JSON.parse(message.toString());
-
-    // Llamada a la API para guardar datos en MongoDB
-    await fetch("/api/saveData", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-  });
-
   return mqttClient;
 };
 
