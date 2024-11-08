@@ -1,4 +1,3 @@
-// src/app/api/getData/route.ts
 import { NextResponse } from "next/server";
 import clientPromise from "@/utils/mongoDb";
 
@@ -12,12 +11,11 @@ export async function GET() {
     const collection = db.collection("ciclos2");
 
     // Asegúrate de ordenar por el campo 'timestamp' de manera ascendente
-    const data = await collection
-      .find({})
-      .sort({ timestamp: 1 }) // Ordenar ascendente por el campo 'timestamp'
-      .toArray();
+    const data = await collection.find({}).sort({ timestamp: 1 }).toArray();
 
-    return NextResponse.json(data);
+    const response = NextResponse.json(data);
+    response.headers.set("Cache-Control", "no-store");
+    return response;
   } catch (error) {
     console.error("Error al obtener datos de MongoDB:", error);
     return NextResponse.json(
