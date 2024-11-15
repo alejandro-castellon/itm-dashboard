@@ -15,9 +15,9 @@ export async function GET() {
       .find({})
       .sort({ timestamp: -1 })
       .limit(1)
-      .toArray();
+      .next();
 
-    const response = NextResponse.json(latestData[0]);
+    const response = NextResponse.json(latestData);
     response.headers.set("Cache-Control", "no-store");
     return response;
   } catch (error) {

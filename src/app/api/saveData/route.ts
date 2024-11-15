@@ -24,9 +24,6 @@ export async function POST(req: Request) {
       secondCounter = 0; // Si es un segundo nuevo, reiniciar el contador
     }
 
-    // Actualizar el último timestamp utilizado
-    lastTimestamp = timestamp.getTime();
-
     // Crear el documento para insertar en la base de datos con el timestamp ajustado
     const document = { temperatura, presion, tiempo, timestamp };
 
@@ -41,7 +38,16 @@ export async function POST(req: Request) {
     const collection = db.collection("ciclos2"); // Asegúrate de que el nombre de la colección sea correcto
 
     // Inserta el documento en la colección
-    const result = await collection.insertOne(document);
+    const result = await collection.updateOne(
+      { timestamp }, // Busca un documento con el mismo timestamp
+      { $set: document }, // Si existe, lo actualiza; si no, lo inserta
+      { upsert: true }
+    );
+
+    // Actualizar el último timestamp utilizado si la operación fue exitosa
+    if (result.acknowledged) {
+      lastTimestamp = timestamp.getTime();
+    }
 
     return NextResponse.json({ success: true, data: result });
   } catch (error) {

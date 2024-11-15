@@ -34,6 +34,7 @@ export default function Page() {
   );
   const [client] = useState(connectMqttClient());
   const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
+  const [lastTimestamp, setLastTimestamp] = useState<string | null>(null);
 
   // Obtener todos los datos al cargar la página
   useEffect(() => {
@@ -77,17 +78,20 @@ export default function Page() {
             throw new Error("Error al obtener el último valor");
           }
           const data = await response.json();
-          const lastPressData = {
-            time: data.timestamp, // Usar el timestamp tal cual
-            value: data.presion,
-          };
-          const lastTempData = {
-            time: data.timestamp, // Usar el timestamp tal cual
-            value: data.temperatura,
-          };
+          if (data.timestamp !== lastTimestamp) {
+            setLastTimestamp(data.timestamp);
+            const lastPressData = {
+              time: data.timestamp, // Usar el timestamp tal cual
+              value: data.presion,
+            };
+            const lastTempData = {
+              time: data.timestamp, // Usar el timestamp tal cual
+              value: data.temperatura,
+            };
 
-          setChartPress((prevData) => [...prevData, lastPressData]);
-          setChartTemp((prevData) => [...prevData, lastTempData]);
+            setChartPress((prevData) => [...prevData, lastPressData]);
+            setChartTemp((prevData) => [...prevData, lastTempData]);
+          }
         } catch (error) {
           console.error("Error al obtener el último valor:", error);
         }
