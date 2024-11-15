@@ -13,9 +13,7 @@ export async function GET() {
     // Asegúrate de ordenar por el campo 'timestamp' de manera ascendente
     const data = await collection.find({}).sort({ timestamp: 1 }).toArray();
 
-    const response = NextResponse.json(data);
-    response.headers.set("Cache-Control", "no-store");
-    return response;
+    return NextResponse.json(data);
   } catch (error) {
     console.error("Error al obtener datos de MongoDB:", error);
     return NextResponse.json(
