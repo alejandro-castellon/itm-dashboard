@@ -27,8 +27,6 @@ export async function POST(req: Request) {
     // Crear el documento para insertar en la base de datos con el timestamp ajustado
     const document = { temperatura, presion, tiempo, timestamp };
 
-    console.log("Datos recibidos con timestamp único:", timestamp);
-
     // Conectar a la base de datos
     const client = await clientPromise;
     if (!client) {

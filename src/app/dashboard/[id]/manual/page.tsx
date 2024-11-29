@@ -193,38 +193,6 @@ export default function Page({ params }: { params: { id: string } }) {
               </div>
             </CardContent>
           </Card>
-          {(type === 2 || type === 4) && (
-            <>
-              <Card>
-                <CardHeader className="pb-0">
-                  <CardTitle className="flex items-center justify-between">
-                    <div className="flex">
-                      <Gauge size={24} className="mr-2" />
-                      Flujometro
-                    </div>
-                    m3/h
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="flex items-center justify-center bg-sky-100 dark:bg-gray-800 m-4">
-                  <div className="text-5xl font-bold mt-2">5.00</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-0">
-                  <CardTitle className="flex items-center justify-between">
-                    <div className="flex">
-                      <Thermometer size={24} className="mr-1" />
-                      Cantidad agua
-                    </div>
-                    L
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="flex items-center justify-center bg-sky-100 dark:bg-gray-800 m-4">
-                  <div className="text-5xl font-bold mt-2">35.00</div>
-                </CardContent>
-              </Card>
-            </>
-          )}
         </div>
       </div>
     </main>
