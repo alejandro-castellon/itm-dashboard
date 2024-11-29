@@ -7,8 +7,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Gauge, Thermometer, Circle, CircleCheckBig } from "lucide-react";
 import { supabase } from "@/utils/supabaseClient";
 import { connectMqttClient } from "@/utils/mqtt";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
 
 export default function Page({ params }: { params: { id: string } }) {
+  const [isRunning, setIsRunning] = useState<boolean>(false);
   const [isDoorOpen, setIsDoorOpen] = useState(false);
   const [isResisAlta, setIsResisAlta] = useState(false);
   const [isResisBaja, setIsResisBaja] = useState(false);
@@ -91,6 +103,23 @@ export default function Page({ params }: { params: { id: string } }) {
 
     fetchAutoclaveType();
   }, [params.id]);
+  const handleStart = () => {
+    if (client) {
+      // Publicar un mensaje al ESP para que comience a enviar datos
+      client.publish("autoclaves/manual", "1");
+      setIsRunning(true);
+    }
+  };
+
+  const handleCancel = () => {
+    if (client) {
+      // Publicar un mensaje al ESP para que detenga el envío de datos
+      client.publish("autoclaves/manual", "0");
+    }
+    setIsRunning(false);
+    setChartPress([]);
+    setChartTemp([]);
+  };
 
   return (
     <main className="p-4">
@@ -193,6 +222,44 @@ export default function Page({ params }: { params: { id: string } }) {
               </div>
             </CardContent>
           </Card>
+        </div>
+        <div className="lg:col-span-1 flex lg:flex-col lg:items-start items-center justify-center gap-4 my-4 pb-10">
+          <Button
+            className="bg-sky-500 px-6 py-3 text-xl w-full lg:w-3/4"
+            onClick={handleStart}
+            disabled={isRunning}
+          >
+            Comenzar
+          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button
+                className="bg-sky-500 px-6 py-3 text-xl w-full lg:w-3/4"
+                disabled={!isRunning}
+              >
+                Cancelar
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Cancelar</DialogTitle>
+                <DialogDescription>
+                  ¿Está seguro que desea parar el ciclo?
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="sm:justify-start">
+                <DialogClose asChild>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={handleCancel}
+                  >
+                    Parar el ciclo
+                  </Button>
+                </DialogClose>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </main>

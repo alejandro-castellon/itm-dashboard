@@ -37,7 +37,7 @@ export default function Page() {
   const [lastTimestamp, setLastTimestamp] = useState<string | null>(null);
 
   // Obtener todos los datos al cargar la página
-  useEffect(() => {
+  /*useEffect(() => {
     const fetchAllData = async () => {
       try {
         const response = await fetch("/api/getData");
@@ -99,15 +99,45 @@ export default function Page() {
 
       setIntervalId(interval);
     }
+  };*/
+
+  const handleStart = () => {
+    if (client) {
+      // Publicar un mensaje al ESP para que comience a enviar datos
+      client.publish("autoclaves/puerta", "1");
+      setIsRunning(true);
+
+      client.on("message", (topic: string, message: Buffer) => {
+        const payload = JSON.parse(message.toString());
+        console.log("Mensaje recibido:", payload);
+
+        const currentTime = new Date(Date.now());
+        currentTime.setHours(currentTime.getHours() - 4);
+        setChartPress((prevData) => [
+          ...prevData,
+          { time: currentTime, value: payload.presion },
+        ]);
+        setChartTemp((prevData) => [
+          ...prevData,
+          { time: currentTime, value: payload.temperatura },
+        ]);
+
+        setTotalTime(payload.tiempo);
+      });
+    }
   };
 
   const handleCancel = () => {
     if (client) {
       // Publicar un mensaje al ESP para que detenga el envío de datos
       client.publish("autoclaves/puerta", "0");
+      // Limpiar listeners del cliente MQTT
+      client.removeAllListeners("message");
     }
     setIsRunning(false);
     setTotalTime(0);
+    setChartPress([]);
+    setChartTemp([]);
 
     // Limpia el intervalo
     if (intervalId) {
