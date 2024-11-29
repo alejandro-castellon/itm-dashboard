@@ -36,11 +36,7 @@ export async function POST(req: Request) {
     const collection = db.collection("ciclos2"); // Asegúrate de que el nombre de la colección sea correcto
 
     // Inserta el documento en la colección
-    const result = await collection.updateOne(
-      { timestamp }, // Busca un documento con el mismo timestamp
-      { $set: document }, // Si existe, lo actualiza; si no, lo inserta
-      { upsert: true }
-    );
+    const result = await collection.insertOne(document);
 
     // Actualizar el último timestamp utilizado si la operación fue exitosa
     if (result.acknowledged) {
