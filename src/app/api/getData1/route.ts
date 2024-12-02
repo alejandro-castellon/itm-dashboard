@@ -8,7 +8,7 @@ export async function GET() {
       throw new Error("Failed to connect to MongoDB");
     }
     const db = client.db("autoclaves");
-    const collection = db.collection("ciclos2");
+    const collection = db.collection("ciclos");
 
     // Asegúrate de ordenar por el campo 'timestamp' de manera ascendente
     const data = await collection.find({}).toArray();
