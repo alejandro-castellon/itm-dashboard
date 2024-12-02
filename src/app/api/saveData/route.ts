@@ -33,7 +33,7 @@ export async function POST(req: Request) {
       throw new Error("Failed to connect to the database");
     }
     const db = client.db("autoclaves"); // Asegúrate de que el nombre de la base de datos sea correcto
-    const collection = db.collection("ciclos2"); // Asegúrate de que el nombre de la colección sea correcto
+    const collection = db.collection("ciclos1"); // Asegúrate de que el nombre de la colección sea correcto
 
     // Inserta el documento en la colección
     const result = await collection.insertOne(document);
