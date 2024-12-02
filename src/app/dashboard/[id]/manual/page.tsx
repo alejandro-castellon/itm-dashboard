@@ -18,71 +18,71 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
+import { set } from "react-hook-form";
 
 export default function Page({ params }: { params: { id: string } }) {
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [isDoorOpen, setIsDoorOpen] = useState(false);
+  const [isDoorClose, setIsDoorClose] = useState(false);
   const [isResisAlta, setIsResisAlta] = useState(false);
   const [isResisBaja, setIsResisBaja] = useState(false);
   const [isEVDrenaje, setIsEVDrenaje] = useState(false);
   const [type, setType] = useState<number>();
   const [client] = useState(connectMqttClient()); // Usar el cliente MQTT del layout
-  const [chartPress, setChartPress] = useState<{ time: any; value: number }[]>(
-    []
-  );
-  const [chartTemp, setChartTemp] = useState<{ time: any; value: number }[]>(
-    []
-  );
+  const [chartPress, setChartPress] = useState<{ value: number }[]>([]);
+  const [chartTemp, setChartTemp] = useState<{ value: number }[]>([]);
+  const [digitalInputs, setDigitalInputs] = useState<{
+    [key: string]: boolean;
+  }>({
+    open: false,
+    close: false,
+    door: false,
+  });
 
   useEffect(() => {
     if (client) {
       client.on("message", (topic: string, message: Buffer) => {
         const payload = JSON.parse(message.toString());
 
-        const currentTime = new Date().getTime();
-
-        setChartPress((prevData) => [
-          ...prevData,
-          { time: currentTime, value: payload.presion },
-        ]);
+        setChartPress((prevData) => [...prevData, { value: payload.presion }]);
         setChartTemp((prevData) => [
           ...prevData,
-          { time: currentTime, value: payload.temperatura },
+          { value: payload.temperatura },
         ]);
+        if (payload.digital === 4) {
+          setDigitalInputs({
+            open: true,
+            close: false,
+            door: true,
+          });
+        }
+        if (payload.digital === 1) {
+          setDigitalInputs({
+            open: false,
+            close: false,
+            door: false,
+          });
+        }
+        if (payload.digital === 2) {
+          setDigitalInputs({
+            open: true,
+            close: true,
+            door: true,
+          });
+        }
       });
     }
   }, [client]);
 
-  const handleDoorOpenClick = () => {
+  const toggleSwitch = (
+    toggleState: boolean,
+    setToggleState: React.Dispatch<React.SetStateAction<boolean>>,
+    topic: string
+  ) => {
     if (client) {
-      // Publicar un mensaje al ESP para que comience a enviar datos
-      const message = isDoorOpen ? "0" : "1";
-      client.publish("autoclaves/puerta", message);
-      setIsDoorOpen(!isDoorOpen);
-    }
-  };
-  const handleResisAltaClick = () => {
-    if (client) {
-      // Publicar un mensaje al ESP para que comience a enviar datos
-      const message = isResisAlta ? "0" : "1";
-      client.publish("autoclaves/resis/alta", message);
-      setIsResisAlta(!isResisAlta);
-    }
-  };
-  const handleResisBajaClick = () => {
-    if (client) {
-      // Publicar un mensaje al ESP para que comience a enviar datos
-      const message = isResisBaja ? "0" : "1";
-      client.publish("autoclaves/resis/baja", message);
-      setIsResisBaja(!isResisBaja);
-    }
-  };
-  const handleEVDrenajeClick = () => {
-    if (client) {
-      // Publicar un mensaje al ESP para que comience a enviar datos
-      const message = isEVDrenaje ? "0" : "1";
-      client.publish("autoclaves/ev", message);
-      setIsEVDrenaje(!isEVDrenaje);
+      const message = toggleState ? "0" : "1";
+      client.publish(topic, message);
+      setToggleState(!toggleState);
     }
   };
   useEffect(() => {
@@ -106,7 +106,7 @@ export default function Page({ params }: { params: { id: string } }) {
   const handleStart = () => {
     if (client) {
       // Publicar un mensaje al ESP para que comience a enviar datos
-      client.publish("autoclaves/manual", "1");
+      client.publish("autoclaves/puerta", "1");
       setIsRunning(true);
     }
   };
@@ -114,7 +114,7 @@ export default function Page({ params }: { params: { id: string } }) {
   const handleCancel = () => {
     if (client) {
       // Publicar un mensaje al ESP para que detenga el envío de datos
-      client.publish("autoclaves/manual", "0");
+      client.publish("autoclaves/puerta", "0");
     }
     setIsRunning(false);
     setChartPress([]);
@@ -130,18 +130,41 @@ export default function Page({ params }: { params: { id: string } }) {
         <div className="lg:col-span-1 mt-10">
           <div className="flex flex-col gap-4">
             <div className="flex items-center space-x-2">
-              <Switch id="resis-alta" onCheckedChange={handleResisAltaClick} />
+              <Switch
+                id="resis-alta"
+                onCheckedChange={() =>
+                  toggleSwitch(
+                    isResisAlta,
+                    setIsResisAlta,
+                    "autoclaves/resis/alta"
+                  )
+                }
+                disabled={!isRunning}
+              />
               <Label htmlFor="resis-alta">Resistencia Alta</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <Switch id="resis-baja" onCheckedChange={handleResisBajaClick} />
+              <Switch
+                id="resis-baja"
+                onCheckedChange={() =>
+                  toggleSwitch(
+                    isResisBaja,
+                    setIsResisBaja,
+                    "autoclaves/resis/baja"
+                  )
+                }
+                disabled={!isRunning}
+              />
               <Label htmlFor="resis-baja">Resistencia Baja</Label>
             </div>
             {(type === 2 || type === 4) && (
               <div className="flex items-center space-x-2">
                 <Switch
                   id="ev-drenaje"
-                  onCheckedChange={handleEVDrenajeClick}
+                  onCheckedChange={() =>
+                    toggleSwitch(isEVDrenaje, setIsEVDrenaje, "autoclaves/ev")
+                  }
+                  disabled={!isRunning}
                 />
                 <Label htmlFor="ev--drenje">EV Drenaje</Label>
               </div>
@@ -149,13 +172,35 @@ export default function Page({ params }: { params: { id: string } }) {
 
             {(type === 3 || type === 4) && (
               <div className="flex items-center space-x-2">
-                <Switch id="puerta" onCheckedChange={handleDoorOpenClick} />
-                <Label htmlFor="puerta">Puerta</Label>
+                <Switch
+                  id="puerta-open"
+                  onCheckedChange={() =>
+                    toggleSwitch(isDoorOpen, setIsDoorOpen, "autoclaves/abrir")
+                  }
+                  disabled={!isRunning}
+                />
+                <Label htmlFor="puerta">Apertura Puerta</Label>
+              </div>
+            )}
+            {(type === 3 || type === 4) && (
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="puerta-close"
+                  onCheckedChange={() =>
+                    toggleSwitch(
+                      isDoorClose,
+                      setIsDoorClose,
+                      "autoclaves/cerrar"
+                    )
+                  }
+                  disabled={!isRunning}
+                />
+                <Label htmlFor="puerta">Cierre Puerta</Label>
               </div>
             )}
           </div>
           <div className="flex items-center mt-10">
-            {isDoorOpen ? (
+            {digitalInputs.door ? (
               <CircleCheckBig className="mr-2 text-sky-500" />
             ) : (
               <Circle className="mr-2" />
@@ -165,7 +210,7 @@ export default function Page({ params }: { params: { id: string } }) {
           {(type === 3 || type === 4) && (
             <>
               <div className="flex items-center mt-4">
-                {isDoorOpen ? (
+                {digitalInputs.close ? (
                   <CircleCheckBig className="mr-2 text-sky-500" />
                 ) : (
                   <Circle className="mr-2" />
@@ -173,10 +218,10 @@ export default function Page({ params }: { params: { id: string } }) {
                 F. Carrera Cerrado
               </div>
               <div className="flex items-center mt-4">
-                {isDoorOpen ? (
-                  <Circle className="mr-2" />
-                ) : (
+                {digitalInputs.open ? (
                   <CircleCheckBig className="mr-2 text-sky-500" />
+                ) : (
+                  <Circle className="mr-2" />
                 )}
                 F. Carrera Abierto
               </div>
