@@ -19,22 +19,33 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { ChartComponent } from "@/components/autoclaves/chart";
-import { url } from "inspector";
 
-type Estado = "Normal" | "Advertencia" | "Crítico";
+type PrediccionData = {
+  estado: string[];
+};
 
-interface PrediccionData {
-  predicciones: {
-    temperatura: number;
-    presion: number;
+type ReporteData = {
+  estado: string[];
+  reporte: {
+    total_ciclos: number;
+    ciclos_normales: number;
+    ciclos_anomalos: number;
+    porcentaje_anomalias: number;
+    presion_max: number | null;
+    presion_min: number | null;
+    presion_promedio: number | null;
+    temperatura_max: number | null;
+    temperatura_min: number | null;
+    temperatura_promedio: number | null;
+    recomendacion: string;
   };
-  estado: {
-    temperatura: Estado;
-    presion: Estado;
-  };
-}
+};
 
-export default function Page() {
+export default function Reportes() {
+  const [resultado, setResultado] = useState<ReporteData | null>(null);
+  const [chartData, setChartData] = useState<{ time: any; value: number }[]>(
+    []
+  );
   const [loading, setLoading] = useState<boolean>(false);
   const [chartPress, setChartPress] = useState<{ time: any; value: number }[]>(
     []
@@ -43,34 +54,64 @@ export default function Page() {
     []
   );
   const cycles = [
-    { id: 1, date: new Date(2024, 0o12, 0o35, 8, 10, 8, 11) },
+    { id: 1, date: new Date(2025, 0o0, 0o4, 8, 10, 8, 11) },
     {
       id: 2,
-      date: new Date(2024, 0o12, 0o35, 9, 35, 30, 11),
+      date: new Date(2025, 0o0, 0o4, 9, 35, 30, 11),
     },
     {
       id: 3,
-      date: new Date(2024, 0o12, 0o35, 10, 24, 46, 11),
+      date: new Date(2025, 0o0, 0o4, 10, 24, 46, 11),
+    },
+    {
+      id: 4,
+      date: new Date(2025, 0o0, 0o5, 14, 24, 46, 11),
+    },
+    {
+      id: 5,
+      date: new Date(2025, 0o0, 0o7, 14, 37, 46, 11),
     },
   ];
 
-  const [data, setData] = useState<PrediccionData | null>(null);
-
   useEffect(() => {
-    fetch("/api/predict")
-      .then((res) => res.json())
-      .then((data) => setData(data));
+    const fetchPrediccion = async () => {
+      try {
+        const res = await fetch("/api/predict");
+        if (!res.ok) throw new Error("Error al obtener la predicción");
+
+        const data = await res.json();
+        setResultado(data);
+
+        // Convertir los estados en datos numéricos para la gráfica
+        interface FormattedData {
+          time: number;
+          value: number;
+        }
+
+        const formattedData: FormattedData[] = data.estado.map(
+          (estado: string, index: number) => ({
+            time: new Date(Date.now() + index * 1000), // Usando un objeto Date
+            value: estado === "Anómalo" ? 1 : 0, // 1 para Anómalo, 0 para Normal
+          })
+        );
+
+        setChartData(formattedData);
+      } catch (error) {
+        console.error("Error al obtener datos:", error);
+        setResultado(null);
+      }
+    };
+
+    fetchPrediccion();
   }, []);
-
-  if (!data) return <p>Cargando datos...</p>;
-
-  const { predicciones, estado } = data;
 
   const fetchDataOnDialogOpen = async (id: number) => {
     setLoading(true); // Activar el estado de carga
     var url = "/api/getData";
     if (id === 1) url = "/api/getData2";
     if (id === 2) url = "/api/getData1";
+    if (id === 4) url = "/api/getData4";
+    if (id === 5) url = "/api/getData5";
     try {
       const response = await fetch(url);
       if (!response.ok) {
@@ -142,65 +183,93 @@ export default function Page() {
         </Dialog>
       ))}
       <div className="p-4">
-        <h1 className="text-xl font-bold">Mantenimiento Predictivo</h1>
-        <div className="mt-4">
-          <h2 className="text-lg font-semibold">Estado del Equipo</h2>
-          <div className="grid grid-cols-2 gap-4 mt-2">
-            <div>
-              <p>
-                Temperatura próxima: {predicciones.temperatura.toFixed(2)}°C
-              </p>
-              <p>
-                Estado:{" "}
-                <span
-                  className={
-                    estado.temperatura === "Crítico"
-                      ? "text-red-600"
-                      : estado.temperatura === "Advertencia"
-                      ? "text-yellow-600"
-                      : "text-green-600"
-                  }
-                >
-                  {estado.temperatura}
-                </span>
-              </p>
-            </div>
-            <div>
-              <p>Presión próxima: {predicciones.presion.toFixed(2)} bar</p>
-              <p>
-                Estado:{" "}
-                <span
-                  className={
-                    estado.presion === "Crítico"
-                      ? "text-red-600"
-                      : estado.presion === "Advertencia"
-                      ? "text-yellow-600"
-                      : "text-green-600"
-                  }
-                >
-                  {estado.presion}
-                </span>
-              </p>
+        <h1 className="text-xl font-bold">Reporte de Estado</h1>
+        {resultado ? (
+          <div className="mt-4">
+            <ChartComponent data={chartData} />
+            <div className="mt-2">
+              <p className="text-green-500">0 = Normal</p>
+              <p className="text-red-500">1 = Anómalo</p>
             </div>
           </div>
-        </div>
-        <div className="mt-4">
-          <h2 className="text-lg font-semibold">Recomendaciones</h2>
-          {estado.temperatura === "Crítico" || estado.presion === "Crítico" ? (
-            <p className="text-red-600">
-              Atención inmediata requerida. Programar mantenimiento.
+        ) : (
+          <p className="text-red-500 mt-4">Cargando datos...</p>
+        )}
+      </div>
+      <div className="p-6 bg-gray-100 min-h-screen">
+        <h1 className="text-2xl font-bold text-center mb-6">
+          Reporte de Estado
+        </h1>
+
+        {resultado ? (
+          <div className="bg-white shadow-lg p-6 rounded-lg">
+            {/* Resumen del Reporte */}
+            <h2 className="text-lg font-semibold mt-6">Resumen del Reporte</h2>
+            <div className="mt-2">
+              <p>
+                <strong>Total de Registros:</strong>{" "}
+                {resultado.reporte.total_ciclos}
+              </p>
+              <p>
+                <strong>Registros Normales:</strong>{" "}
+                {resultado.reporte.ciclos_normales}
+              </p>
+              <p>
+                <strong>Registros Anómalos:</strong>{" "}
+                {resultado.reporte.ciclos_anomalos}
+              </p>
+              <p>
+                <strong>Porcentaje de Anomalías:</strong>{" "}
+                {resultado.reporte.porcentaje_anomalias}%
+              </p>
+            </div>
+
+            {/* Datos de Presión */}
+            <h2 className="text-lg font-semibold mt-6">Presión (Bar)</h2>
+            <div className="mt-2">
+              <p>
+                <strong>Máxima:</strong> {resultado.reporte.presion_max} bar
+              </p>
+              <p>
+                <strong>Mínima:</strong> {resultado.reporte.presion_min} bar
+              </p>
+              <p>
+                <strong>Promedio:</strong> {resultado.reporte.presion_promedio}{" "}
+                bar
+              </p>
+            </div>
+
+            {/* Datos de Temperatura */}
+            <h2 className="text-lg font-semibold mt-6">Temperatura (°C)</h2>
+            <div className="mt-2">
+              <p>
+                <strong>Máxima:</strong> {resultado.reporte.temperatura_max}°C
+              </p>
+              <p>
+                <strong>Mínima:</strong> {resultado.reporte.temperatura_min}°C
+              </p>
+              <p>
+                <strong>Promedio:</strong>{" "}
+                {resultado.reporte.temperatura_promedio}°C
+              </p>
+            </div>
+
+            {/* Recomendación */}
+            <h2 className="text-lg font-semibold mt-6">Recomendación</h2>
+            <p
+              className={`p-2 rounded-md mt-2 ${
+                resultado.reporte.recomendacion ===
+                "Se recomienda mantenimiento"
+                  ? "bg-red-200 text-red-700"
+                  : "bg-green-200 text-green-700"
+              }`}
+            >
+              {resultado.reporte.recomendacion}
             </p>
-          ) : estado.temperatura === "Advertencia" ||
-            estado.presion === "Advertencia" ? (
-            <p className="text-yellow-600">
-              Monitorear el equipo frecuentemente.
-            </p>
-          ) : (
-            <p className="text-green-600">
-              El equipo opera dentro de parámetros normales.
-            </p>
-          )}
-        </div>
+          </div>
+        ) : (
+          <p className="text-gray-600 mt-4 text-center">Cargando datos...</p>
+        )}
       </div>
     </main>
   );

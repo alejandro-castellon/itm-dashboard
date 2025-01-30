@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
 import { MongoClient } from "mongodb";
-import * as ss from "simple-statistics";
+import { spawn } from "child_process";
+import path from "path";
 
-const client = new MongoClient(process.env.MONGODB_URI!);
-
-// Define umbrales críticos
-const TEMPERATURA_CRITICA = 120;
-const PRESION_CRITICA = 2;
+const uri =
+  "mongodb+srv://casfer:casfer@itm.bb3zl.mongodb.net/?retryWrites=true&w=majority&appName=ITM";
+const client = new MongoClient(uri);
 
 export async function GET() {
   try {
@@ -14,52 +13,75 @@ export async function GET() {
     const db = client.db("autoclaves");
     const collection = db.collection("ciclos3");
 
-    const data = await collection.find({}).sort({ tiempo: -1 }).toArray();
+    // Obtener datos de ciclos finalizados
+    const ciclos = await collection
+      .find(
+        {},
+        { projection: { _id: 0, presion: 1, temperatura: 1, tiempo: 1 } }
+      )
+      .toArray();
 
-    const temperaturas = data.map((d) => d.temperatura);
-    const presiones = data.map((d) => d.presion);
-    const tiempos = data.map((_, i) => i);
+    if (ciclos.length === 0) {
+      return NextResponse.json(
+        { error: "No hay datos para analizar" },
+        { status: 400 }
+      );
+    }
 
-    const tendenciaTemp = ss.linearRegression(
-      tiempos.map((_, i) => [tiempos[i], temperaturas[i]])
-    );
-    const tendenciaPres = ss.linearRegression(
-      tiempos.map((_, i) => [tiempos[i], presiones[i]])
-    );
+    // Llamar al script de Python
+    const scriptPath = path.join(process.cwd(), "public/scripts/predict.py");
+    const pythonProcess = spawn("python3", [scriptPath], {
+      stdio: ["pipe", "pipe", "pipe"],
+    });
 
-    const proximaTemp = ss.linearRegressionLine(tendenciaTemp)(tiempos.length);
-    const proximaPres = ss.linearRegressionLine(tendenciaPres)(tiempos.length);
+    // Enviar datos a stdin del proceso de Python
+    pythonProcess.stdin.write(JSON.stringify(ciclos));
+    pythonProcess.stdin.end();
 
-    // Determinar el estado predictivo
-    const estado = {
-      temperatura:
-        proximaTemp > TEMPERATURA_CRITICA
-          ? "Crítico"
-          : proximaTemp > TEMPERATURA_CRITICA * 0.8
-          ? "Advertencia"
-          : "Normal",
-      presion:
-        proximaPres > PRESION_CRITICA
-          ? "Crítico"
-          : proximaPres > PRESION_CRITICA * 0.8
-          ? "Advertencia"
-          : "Normal",
-    };
+    let resultado = "";
+    let errorOutput = "";
 
-    return NextResponse.json({
-      predicciones: {
-        temperatura: proximaTemp,
-        presion: proximaPres,
-      },
-      estado,
+    pythonProcess.stdout.on("data", (data) => {
+      resultado += data.toString();
+    });
+
+    pythonProcess.stderr.on("data", (data) => {
+      errorOutput += data.toString();
+    });
+
+    return new Promise((resolve, reject) => {
+      pythonProcess.on("close", (code) => {
+        if (code === 0) {
+          try {
+            resolve(NextResponse.json(JSON.parse(resultado)));
+          } catch (jsonError) {
+            reject(
+              NextResponse.json({
+                error: "Error al parsear respuesta de Python",
+                detalle:
+                  jsonError instanceof Error
+                    ? jsonError.message
+                    : String(jsonError),
+              })
+            );
+          }
+        } else {
+          reject(
+            NextResponse.json({
+              error: "Error en el procesamiento del modelo",
+              detalle: errorOutput,
+            })
+          );
+        }
+      });
     });
   } catch (error) {
-    console.error("Error en el análisis predictivo:", error);
     return NextResponse.json(
-      { error: "Error en el análisis predictivo" },
+      {
+        error: "Error en la API",
+        detalle: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
-  } finally {
-    await client.close();
   }
 }
