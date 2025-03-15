@@ -39,19 +39,19 @@ export default function Reportes({ params }: { params: { id: string } }) {
       { id: 1, date: new Date(2025, 0o0, 0o4, 8, 10, 8, 11) },
       {
         id: 2,
-        date: new Date(2025, 0o0, 0o4, 9, 35, 30, 11),
+        date: new Date(2025, 0o0, 0o17, 9, 35, 30, 11),
       },
       {
         id: 3,
-        date: new Date(2025, 0o0, 0o4, 10, 24, 46, 11),
+        date: new Date(2025, 0o0, 0o27, 10, 24, 46, 11),
       }
     );
   } else {
     cycles.push(
-      { id: 1, date: new Date(2025, 0o0, 0o4, 8, 10, 8, 11) },
+      { id: 1, date: new Date(2025, 0o0, 0o17, 8, 30, 8, 11) },
       {
         id: 2,
-        date: new Date(2025, 0o0, 0o4, 9, 35, 30, 11),
+        date: new Date(2025, 0o0, 0o27, 11, 39, 30, 11),
       }
     );
   }
