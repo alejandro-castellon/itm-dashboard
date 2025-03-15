@@ -19,30 +19,10 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { ChartComponent } from "@/components/autoclaves/chart";
+import { ReportData } from "@/types";
 
-type PrediccionData = {
-  estado: string[];
-};
-
-type ReporteData = {
-  estado: string[];
-  reporte: {
-    total_ciclos: number;
-    ciclos_normales: number;
-    ciclos_anomalos: number;
-    porcentaje_anomalias: number;
-    presion_max: number | null;
-    presion_min: number | null;
-    presion_promedio: number | null;
-    temperatura_max: number | null;
-    temperatura_min: number | null;
-    temperatura_promedio: number | null;
-    recomendacion: string;
-  };
-};
-
-export default function Reportes() {
-  const [resultado, setResultado] = useState<ReporteData | null>(null);
+export default function Reportes({ params }: { params: { id: string } }) {
+  const [resultado, setResultado] = useState<ReportData | null>(null);
   const [chartData, setChartData] = useState<{ time: any; value: number }[]>(
     []
   );
@@ -53,30 +33,38 @@ export default function Reportes() {
   const [chartTemp, setChartTemp] = useState<{ time: any; value: number }[]>(
     []
   );
-  const cycles = [
-    { id: 1, date: new Date(2025, 0o0, 0o4, 8, 10, 8, 11) },
-    {
-      id: 2,
-      date: new Date(2025, 0o0, 0o4, 9, 35, 30, 11),
-    },
-    {
-      id: 3,
-      date: new Date(2025, 0o0, 0o4, 10, 24, 46, 11),
-    },
-    {
-      id: 4,
-      date: new Date(2025, 0o0, 0o5, 14, 24, 46, 11),
-    },
-    {
-      id: 5,
-      date: new Date(2025, 0o0, 0o7, 14, 37, 46, 11),
-    },
-  ];
+  const cycles = [];
+  if (params.id === "001") {
+    cycles.push(
+      { id: 1, date: new Date(2025, 0o0, 0o4, 8, 10, 8, 11) },
+      {
+        id: 2,
+        date: new Date(2025, 0o0, 0o4, 9, 35, 30, 11),
+      },
+      {
+        id: 3,
+        date: new Date(2025, 0o0, 0o4, 10, 24, 46, 11),
+      }
+    );
+  } else {
+    cycles.push(
+      { id: 1, date: new Date(2025, 0o0, 0o4, 8, 10, 8, 11) },
+      {
+        id: 2,
+        date: new Date(2025, 0o0, 0o4, 9, 35, 30, 11),
+      }
+    );
+  }
 
   useEffect(() => {
     const fetchPrediccion = async () => {
       try {
-        const res = await fetch("/api/predict");
+        let res: Response;
+        if (params.id === "001") {
+          res = await fetch("/api/predict");
+        } else {
+          res = await fetch("/api/predict2");
+        }
         if (!res.ok) throw new Error("Error al obtener la predicción");
 
         const data = await res.json();
@@ -108,10 +96,13 @@ export default function Reportes() {
   const fetchDataOnDialogOpen = async (id: number) => {
     setLoading(true); // Activar el estado de carga
     var url = "/api/getData";
-    if (id === 1) url = "/api/getData2";
-    if (id === 2) url = "/api/getData1";
-    if (id === 4) url = "/api/getData4";
-    if (id === 5) url = "/api/getData5";
+    if (params.id === "001") {
+      if (id === 1) url = "/api/getData2";
+      if (id === 2) url = "/api/getData4";
+    } else {
+      if (id === 1) url = "/api/getData5";
+      if (id === 2) url = "/api/getData1";
+    }
     try {
       const response = await fetch(url);
       if (!response.ok) {
@@ -183,7 +174,9 @@ export default function Reportes() {
         </Dialog>
       ))}
       <div className="p-4">
-        <h1 className="text-xl font-bold">Reporte de Estado</h1>
+        <h1 className="text-xl font-bold">
+          Reporte de estado del último ciclo
+        </h1>
         {resultado ? (
           <div className="mt-4">
             <ChartComponent data={chartData} />

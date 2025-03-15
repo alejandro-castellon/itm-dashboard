@@ -11,7 +11,7 @@ export async function GET() {
   try {
     await client.connect();
     const db = client.db("autoclaves");
-    const collection = db.collection("ciclos2");
+    const collection = db.collection("ciclos3");
 
     // Obtener datos de ciclos finalizados
     const ciclos = await collection

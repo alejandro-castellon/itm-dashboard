@@ -72,7 +72,7 @@ export default function LoginForm() {
   }
 
   if (loading) {
-    return <div>Loading...</div>; // Puedes reemplazar esto con un spinner
+    return <div>Loading...</div>;
   }
 
   return (
